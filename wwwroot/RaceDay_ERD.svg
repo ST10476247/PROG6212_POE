@@ -1,0 +1,155 @@
+﻿<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" width="1200" height="800" style="background-color: #F8FAFC; font-family: system-ui, -apple-system, sans-serif;">
+  <defs>
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+      <feDropShadow dx="2" dy="4" stdDeviation="4" flood-opacity="0.15"/>
+    </filter>
+    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#475569" />
+    </marker>
+  </defs>
+
+  <!-- Title & Subtitle Banner -->
+  <rect x="40" y="25" width="1120" height="70" rx="12" fill="#1E293B" filter="url(#shadow)"/>
+  <text x="560" y="55" fill="#F8FAFC" font-size="24" font-weight="800" text-anchor="middle">RaceDay - South African Event Management System</text>
+  <text x="560" y="78" fill="#94A3B8" font-size="14" font-weight="500" text-anchor="middle">Entity-Relationship Diagram (ERD) • Primary Keys (PK), Foreign Keys (FK) &amp; Cardinalities</text>
+
+  <!-- Legend -->
+  <rect x="950" y="35" width="190" height="50" rx="6" fill="#0F172A" opacity="0.8"/>
+  <text x="960" y="53" fill="#F59E0B" font-size="11" font-weight="700">[PK] Primary Key</text>
+  <text x="960" y="70" fill="#38BDF8" font-size="11" font-weight="700">[FK] Foreign Key</text>
+
+  <!-- ENTITY 1: ORGANISER -->
+  <g filter="url(#shadow)">
+    <rect x="50" y="130" width="240" height="230" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+    <rect x="50" y="130" width="240" height="40" rx="10" fill="#1E293B"/>
+    <rect x="50" y="160" width="240" height="10" fill="#1E293B"/>
+    <text x="170" y="156" fill="#FFFFFF" font-size="16" font-weight="700" text-anchor="middle">ORGANISER</text>
+    
+    <text x="65" y="190" fill="#F59E0B" font-size="13" font-weight="700">PK OrganiserID</text><text x="180" y="190" fill="#64748B" font-size="12">: Int</text>
+    <text x="65" y="212" fill="#334155" font-size="13">OrganizationName</text><text x="195" y="212" fill="#64748B" font-size="12">: String</text>
+    <text x="65" y="234" fill="#334155" font-size="13">ContactEmail</text><text x="170" y="234" fill="#64748B" font-size="12">: String</text>
+    <text x="65" y="256" fill="#334155" font-size="13">Phone</text><text x="135" y="256" fill="#64748B" font-size="12">: String</text>
+    <text x="65" y="278" fill="#334155" font-size="13">Province</text><text x="145" y="278" fill="#64748B" font-size="12">: String</text>
+    <text x="65" y="300" fill="#334155" font-size="13">IsVerified</text><text x="155" y="300" fill="#64748B" font-size="12">: Bool</text>
+    <text x="65" y="322" fill="#334155" font-size="13">CreatedAt</text><text x="150" y="322" fill="#64748B" font-size="12">: DateTime</text>
+  </g>
+
+  <!-- ENTITY 2: EVENT -->
+  <g filter="url(#shadow)">
+    <rect x="360" y="130" width="260" height="270" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+    <rect x="360" y="130" width="260" height="40" rx="10" fill="#0284C7"/>
+    <rect x="360" y="160" width="260" height="10" fill="#0284C7"/>
+    <text x="490" y="156" fill="#FFFFFF" font-size="16" font-weight="700" text-anchor="middle">EVENT</text>
+    
+    <text x="375" y="190" fill="#F59E0B" font-size="13" font-weight="700">PK EventID</text><text x="475" y="190" fill="#64748B" font-size="12">: Int</text>
+    <text x="375" y="212" fill="#0284C7" font-size="13" font-weight="700">FK OrganiserID</text><text x="495" y="212" fill="#64748B" font-size="12">: Int</text>
+    <text x="375" y="234" fill="#334155" font-size="13">EventName</text><text x="465" y="234" fill="#64748B" font-size="12">: String</text>
+    <text x="375" y="256" fill="#334155" font-size="13">EventType</text><text x="455" y="256" fill="#64748B" font-size="12">: Enum</text>
+    <text x="375" y="278" fill="#334155" font-size="13">EventDate</text><text x="460" y="278" fill="#64748B" font-size="12">: DateTime</text>
+    <text x="375" y="300" fill="#334155" font-size="13">Location</text><text x="450" y="300" fill="#64748B" font-size="12">: String</text>
+    <text x="375" y="322" fill="#334155" font-size="13">Province</text><text x="455" y="322" fill="#64748B" font-size="12">: String</text>
+    <text x="375" y="344" fill="#334155" font-size="13">Status</text><text x="435" y="344" fill="#64748B" font-size="12">: Enum</text>
+    <text x="375" y="366" fill="#334155" font-size="13">BannerUrl</text><text x="460" y="366" fill="#64748B" font-size="12">: String</text>
+  </g>
+
+  <!-- ENTITY 3: CATEGORY -->
+  <g filter="url(#shadow)">
+    <rect x="690" y="130" width="250" height="270" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+    <rect x="690" y="130" width="250" height="40" rx="10" fill="#059669"/>
+    <rect x="690" y="160" width="250" height="10" fill="#059669"/>
+    <text x="815" y="156" fill="#FFFFFF" font-size="16" font-weight="700" text-anchor="middle">CATEGORY</text>
+    
+    <text x="705" y="190" fill="#F59E0B" font-size="13" font-weight="700">PK CategoryID</text><text x="815" y="190" fill="#64748B" font-size="12">: Int</text>
+    <text x="705" y="212" fill="#0284C7" font-size="13" font-weight="700">FK EventID</text><text x="800" y="212" fill="#64748B" font-size="12">: Int</text>
+    <text x="705" y="234" fill="#334155" font-size="13">CategoryName</text><text x="815" y="234" fill="#64748B" font-size="12">: String</text>
+    <text x="705" y="256" fill="#334155" font-size="13">DistanceKm</text><text x="800" y="256" fill="#64748B" font-size="12">: Decimal</text>
+    <text x="705" y="278" fill="#334155" font-size="13">EntryFeeZAR</text><text x="805" y="278" fill="#64748B" font-size="12">: Decimal</text>
+    <text x="705" y="300" fill="#334155" font-size="13">MaxCapacity</text><text x="800" y="300" fill="#64748B" font-size="12">: Int</text>
+    <text x="705" y="322" fill="#334155" font-size="13">StartTime</text><text x="785" y="322" fill="#64748B" font-size="12">: TimeSpan</text>
+    <text x="705" y="344" fill="#334155" font-size="13">CutoffHours</text><text x="800" y="344" fill="#64748B" font-size="12">: Decimal</text>
+  </g>
+
+  <!-- ENTITY 4: PARTICIPANT -->
+  <g filter="url(#shadow)">
+    <rect x="690" y="470" width="250" height="270" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+    <rect x="690" y="470" width="250" height="40" rx="10" fill="#D97706"/>
+    <rect x="690" y="500" width="250" height="10" fill="#D97706"/>
+    <text x="815" y="496" fill="#FFFFFF" font-size="16" font-weight="700" text-anchor="middle">PARTICIPANT</text>
+    
+    <text x="705" y="530" fill="#F59E0B" font-size="13" font-weight="700">PK ParticipantID</text><text x="830" y="530" fill="#64748B" font-size="12">: Int</text>
+    <text x="705" y="552" fill="#334155" font-size="13">FirstName</text><text x="785" y="552" fill="#64748B" font-size="12">: String</text>
+    <text x="705" y="574" fill="#334155" font-size="13">LastName</text><text x="785" y="574" fill="#64748B" font-size="12">: String</text>
+    <text x="705" y="596" fill="#334155" font-size="13">SAIDOrPassport</text><text x="825" y="596" fill="#64748B" font-size="12">: String</text>
+    <text x="705" y="618" fill="#334155" font-size="13">Gender</text><text x="770" y="618" fill="#64748B" font-size="12">: String</text>
+    <text x="705" y="640" fill="#334155" font-size="13">ClubName</text><text x="785" y="640" fill="#64748B" font-size="12">: String</text>
+    <text x="705" y="662" fill="#334155" font-size="13">EmergencyPhone</text><text x="825" y="662" fill="#64748B" font-size="12">: String</text>
+    <text x="705" y="684" fill="#334155" font-size="13">Email</text><text x="755" y="684" fill="#64748B" font-size="12">: String</text>
+  </g>
+
+  <!-- ENTITY 5: ENTRY (Associative Entity) -->
+  <g filter="url(#shadow)">
+    <rect x="360" y="470" width="260" height="270" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+    <rect x="360" y="470" width="260" height="40" rx="10" fill="#7C3AED"/>
+    <rect x="360" y="500" width="260" height="10" fill="#7C3AED"/>
+    <text x="490" y="496" fill="#FFFFFF" font-size="16" font-weight="700" text-anchor="middle">ENTRY (Associative)</text>
+    
+    <text x="375" y="530" fill="#F59E0B" font-size="13" font-weight="700">PK EntryID</text><text x="465" y="530" fill="#64748B" font-size="12">: Int</text>
+    <text x="375" y="552" fill="#0284C7" font-size="13" font-weight="700">FK ParticipantID</text><text x="500" y="552" fill="#64748B" font-size="12">: Int</text>
+    <text x="375" y="574" fill="#0284C7" font-size="13" font-weight="700">FK CategoryID</text><text x="485" y="574" fill="#64748B" font-size="12">: Int</text>
+    <text x="375" y="596" fill="#334155" font-size="13">BibNumber</text><text x="465" y="596" fill="#64748B" font-size="12">: String</text>
+    <text x="375" y="618" fill="#334155" font-size="13">RegistrationDate</text><text x="500" y="618" fill="#64748B" font-size="12">: DateTime</text>
+    <text x="375" y="640" fill="#334155" font-size="13">PaymentStatus</text><text x="485" y="640" fill="#64748B" font-size="12">: Enum</text>
+    <text x="375" y="662" fill="#334155" font-size="13">PaymentReference</text><text x="510" y="662" fill="#64748B" font-size="12">: String</text>
+    <text x="375" y="684" fill="#334155" font-size="13">MedicalNotes</text><text x="475" y="684" fill="#64748B" font-size="12">: String</text>
+  </g>
+
+  <!-- ENTITY 6: RESULT -->
+  <g filter="url(#shadow)">
+    <rect x="50" y="470" width="240" height="270" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+    <rect x="50" y="470" width="240" height="40" rx="10" fill="#DC2626"/>
+    <rect x="50" y="500" width="240" height="10" fill="#DC2626"/>
+    <text x="170" y="496" fill="#FFFFFF" font-size="16" font-weight="700" text-anchor="middle">RESULT</text>
+    
+    <text x="65" y="530" fill="#F59E0B" font-size="13" font-weight="700">PK ResultID</text><text x="160" y="530" fill="#64748B" font-size="12">: Int</text>
+    <text x="65" y="552" fill="#0284C7" font-size="13" font-weight="700">FK EntryID (Unique)</text><text x="205" y="552" fill="#64748B" font-size="12">: Int</text>
+    <text x="65" y="574" fill="#334155" font-size="13">GunTime</text><text x="140" y="574" fill="#64748B" font-size="12">: TimeSpan</text>
+    <text x="65" y="596" fill="#334155" font-size="13">ChipTime</text><text x="140" y="596" fill="#64748B" font-size="12">: TimeSpan</text>
+    <text x="65" y="618" fill="#334155" font-size="13">OverallRank</text><text x="155" y="618" fill="#64748B" font-size="12">: Int</text>
+    <text x="65" y="640" fill="#334155" font-size="13">CategoryRank</text><text x="165" y="640" fill="#64748B" font-size="12">: Int</text>
+    <text x="65" y="662" fill="#334155" font-size="13">GenderRank</text><text x="160" y="662" fill="#64748B" font-size="12">: Int</text>
+    <text x="65" y="684" fill="#334155" font-size="13">Status</text><text x="120" y="684" fill="#64748B" font-size="12">: Enum</text>
+  </g>
+
+  <!-- RELATIONSHIP LINES & CARDINALITIES -->
+
+  <!-- R1: ORGANISER (1) ---> (N) EVENT -->
+  <path d="M 290 230 L 360 230" stroke="#475569" stroke-width="3.5" marker-end="url(#arrow)"/>
+  <rect x="300" y="208" width="45" height="20" rx="4" fill="#1E293B"/>
+  <text x="322" y="222" fill="#FFFFFF" font-size="12" font-weight="800" text-anchor="middle">1 : N</text>
+  <text x="325" y="245" fill="#0F172A" font-size="11" font-weight="700" text-anchor="middle">Organises</text>
+
+  <!-- R2: EVENT (1) ---> (N) CATEGORY -->
+  <path d="M 620 230 L 690 230" stroke="#475569" stroke-width="3.5" marker-end="url(#arrow)"/>
+  <rect x="630" y="208" width="45" height="20" rx="4" fill="#0284C7"/>
+  <text x="652" y="222" fill="#FFFFFF" font-size="12" font-weight="800" text-anchor="middle">1 : N</text>
+  <text x="655" y="245" fill="#0F172A" font-size="11" font-weight="700" text-anchor="middle">Has Categories</text>
+
+  <!-- R3: CATEGORY (1) ---> (N) ENTRY -->
+  <path d="M 815 400 L 815 435 L 490 435 L 490 470" stroke="#475569" stroke-width="3.5" fill="none" marker-end="url(#arrow)"/>
+  <rect x="625" y="424" width="45" height="20" rx="4" fill="#059669"/>
+  <text x="647" y="438" fill="#FFFFFF" font-size="12" font-weight="800" text-anchor="middle">1 : N</text>
+  <text x="647" y="420" fill="#0F172A" font-size="11" font-weight="700" text-anchor="middle">Category Registrations</text>
+
+  <!-- R4: PARTICIPANT (1) ---> (N) ENTRY -->
+  <path d="M 690 605 L 620 605" stroke="#475569" stroke-width="3.5" marker-end="url(#arrow)"/>
+  <rect x="630" y="583" width="45" height="20" rx="4" fill="#D97706"/>
+  <text x="652" y="597" fill="#FFFFFF" font-size="12" font-weight="800" text-anchor="middle">1 : N</text>
+  <text x="655" y="622" fill="#0F172A" font-size="11" font-weight="700" text-anchor="middle">Registers</text>
+
+  <!-- R5: ENTRY (1) ---> (0..1) RESULT -->
+  <path d="M 360 605 L 290 605" stroke="#475569" stroke-width="3.5" marker-end="url(#arrow)"/>
+  <rect x="295" y="583" width="55" height="20" rx="4" fill="#7C3AED"/>
+  <text x="322" y="597" fill="#FFFFFF" font-size="12" font-weight="800" text-anchor="middle">1 : 0..1</text>
+  <text x="325" y="622" fill="#0F172A" font-size="11" font-weight="700" text-anchor="middle">Generates</text>
+
+</svg>

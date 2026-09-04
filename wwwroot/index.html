@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RaceDay - South African Event Management System &amp; ERD Data Model</title>
+  <link rel="stylesheet" href="style.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Header Navbar -->
+  <header>
+    <div class="logo">
+      <span>RaceDay<span style="color: var(--accent-gold);">.ZA</span></span>
+      <span class="logo-badge">South Africa</span>
+    </div>
+    <nav>
+      <button class="nav-btn active" onclick="switchTab('erd')">📊 ERD &amp; Data Model</button>
+      <button class="nav-btn" onclick="switchTab('events')">🏃 Browse SA Events</button>
+      <button class="nav-btn" onclick="switchTab('register')">📝 Enter Event</button>
+      <button class="nav-btn" onclick="switchTab('organiser')">⚙️ Organiser Portal</button>
+      <button class="nav-btn" onclick="switchTab('results')">🏆 Results &amp; History</button>
+    </nav>
+  </header>
+
+  <main>
+    <!-- Hero Banner -->
+    <section class="hero">
+      <h1>RaceDay South Africa</h1>
+      <p>The premier full-stack event management platform for South African road running, walking, and cycling. From the iconic Comrades Marathon to the Cape Town Cycle Tour and Soweto Marathon.</p>
+      
+      <div class="hero-stats">
+        <div class="stat-item">
+          <div class="stat-val" id="stat-events-count">3</div>
+          <div class="stat-lbl">Featured Major Events</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-val">R 1,200 ZAR</div>
+          <div class="stat-lbl">Max Entry Tier</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-val">6 Entities</div>
+          <div class="stat-lbl">Full ERD Specification</div>
+        </div>
+        <div class="stat-item">
+          <div class="stat-val">C# .NET 10</div>
+          <div class="stat-lbl">Backend Core</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 1: ERD & DATA MODEL -->
+    <section id="tab-erd" class="tab-content active">
+      <div class="erd-banner">
+        <div>
+          <h2>System Entity-Relationship Diagram (ERD)</h2>
+          <p style="color: var(--text-muted);">Fully normalized data model reflecting Organisers, Events, Categories, Athletes, Associative Entries, and Race Results.</p>
+        </div>
+        <div style="display: flex; gap: 10px;">
+          <a href="/RaceDay_ERD.png" download="RaceDay_ERD.png" class="action-btn gold">
+            📥 Download PNG (Submission)
+          </a>
+          <a href="/RaceDay_ERD.pdf" download="RaceDay_ERD.pdf" class="action-btn">
+            📄 Download PDF (Submission)
+          </a>
+          <a href="/RaceDay_ERD.drawio" download="RaceDay_ERD.drawio" class="action-btn" style="background: #334155;">
+            📐 Draw.io XML
+          </a>
+        </div>
+      </div>
+
+      <!-- Embedded SVG Diagram Viewer -->
+      <div class="erd-container">
+        <div id="svg-diagram-wrapper">
+          <!-- Rendered dynamically or preloaded via SVG -->
+          <svg viewBox="0 0 1200 800" width="1200" height="800" style="background-color: #F8FAFC; font-family: system-ui, sans-serif;">
+            <defs>
+              <filter id="shadow" x="-5%" y="-5%" width="110%" height="110%">
+                <feDropShadow dx="2" dy="4" stdDeviation="4" flood-opacity="0.15"/>
+              </filter>
+              <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="8" markerHeight="8" orient="auto-start-reverse">
+                <path d="M 0 1 L 10 5 L 0 9 z" fill="#475569" />
+              </marker>
+            </defs>
+
+            <!-- Title & Subtitle Banner -->
+            <rect x="40" y="25" width="1120" height="70" rx="12" fill="#1E293B" filter="url(#shadow)"/>
+            <text x="560" y="55" fill="#F8FAFC" font-size="24" font-weight="800" text-anchor="middle">RaceDay - South African Event Management System</text>
+            <text x="560" y="78" fill="#94A3B8" font-size="14" font-weight="500" text-anchor="middle">Entity-Relationship Diagram (ERD) • Primary Keys (PK), Foreign Keys (FK) &amp; Cardinalities</text>
+
+            <!-- Legend -->
+            <rect x="950" y="35" width="190" height="50" rx="6" fill="#0F172A" opacity="0.8"/>
+            <text x="960" y="53" fill="#F59E0B" font-size="11" font-weight="700">[PK] Primary Key</text>
+            <text x="960" y="70" fill="#38BDF8" font-size="11" font-weight="700">[FK] Foreign Key</text>
+
+            <!-- ENTITY 1: ORGANISER -->
+            <g filter="url(#shadow)">
+              <rect x="50" y="130" width="240" height="230" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+              <rect x="50" y="130" width="240" height="40" rx="10" fill="#1E293B"/>
+              <rect x="50" y="160" width="240" height="10" fill="#1E293B"/>
+              <text x="170" y="156" fill="#FFFFFF" font-size="16" font-weight="700" text-anchor="middle">ORGANISER</text>
+              <text x="65" y="190" fill="#F59E0B" font-size="13" font-weight="700">PK OrganiserID</text><text x="180" y="190" fill="#64748B" font-size="12">: Int</text>
+              <text x="65" y="212" fill="#334155" font-size="13">OrganizationName</text><text x="195" y="212" fill="#64748B" font-size="12">: String</text>
+              <text x="65" y="234" fill="#334155" font-size="13">ContactEmail</text><text x="170" y="234" fill="#64748B" font-size="12">: String</text>
+              <text x="65" y="256" fill="#334155" font-size="13">Phone</text><text x="135" y="256" fill="#64748B" font-size="12">: String</text>
+              <text x="65" y="278" fill="#334155" font-size="13">Province</text><text x="145" y="278" fill="#64748B" font-size="12">: String</text>
+              <text x="65" y="300" fill="#334155" font-size="13">IsVerified</text><text x="155" y="300" fill="#64748B" font-size="12">: Bool</text>
+              <text x="65" y="322" fill="#334155" font-size="13">CreatedAt</text><text x="150" y="322" fill="#64748B" font-size="12">: DateTime</text>
+            </g>
+
+            <!-- ENTITY 2: EVENT -->
+            <g filter="url(#shadow)">
+              <rect x="360" y="130" width="260" height="270" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+              <rect x="360" y="130" width="260" height="40" rx="10" fill="#0284C7"/>
+              <rect x="360" y="160" width="260" height="10" fill="#0284C7"/>
+              <text x="490" y="156" fill="#FFFFFF" font-size="16" font-weight="700" text-anchor="middle">EVENT</text>
+              <text x="375" y="190" fill="#F59E0B" font-size="13" font-weight="700">PK EventID</text><text x="475" y="190" fill="#64748B" font-size="12">: Int</text>
+              <text x="375" y="212" fill="#0284C7" font-size="13" font-weight="700">FK OrganiserID</text><text x="495" y="212" fill="#64748B" font-size="12">: Int</text>
+              <text x="375" y="234" fill="#334155" font-size="13">EventName</text><text x="465" y="234" fill="#64748B" font-size="12">: String</text>
+              <text x="375" y="256" fill="#334155" font-size="13">EventType</text><text x="455" y="256" fill="#64748B" font-size="12">: Enum</text>
+              <text x="375" y="278" fill="#334155" font-size="13">EventDate</text><text x="460" y="278" fill="#64748B" font-size="12">: DateTime</text>
+              <text x="375" y="300" fill="#334155" font-size="13">Location</text><text x="450" y="300" fill="#64748B" font-size="12">: String</text>
+              <text x="375" y="322" fill="#334155" font-size="13">Province</text><text x="455" y="322" fill="#64748B" font-size="12">: String</text>
+              <text x="375" y="344" fill="#334155" font-size="13">Status</text><text x="435" y="344" fill="#64748B" font-size="12">: Enum</text>
+              <text x="375" y="366" fill="#334155" font-size="13">BannerUrl</text><text x="460" y="366" fill="#64748B" font-size="12">: String</text>
+            </g>
+
+            <!-- ENTITY 3: CATEGORY -->
+            <g filter="url(#shadow)">
+              <rect x="690" y="130" width="250" height="270" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+              <rect x="690" y="130" width="250" height="40" rx="10" fill="#059669"/>
+              <rect x="690" y="160" width="250" height="10" fill="#059669"/>
+              <text x="815" y="156" fill="#FFFFFF" font-size="16" font-weight="700" text-anchor="middle">CATEGORY</text>
+              <text x="705" y="190" fill="#F59E0B" font-size="13" font-weight="700">PK CategoryID</text><text x="815" y="190" fill="#64748B" font-size="12">: Int</text>
+              <text x="705" y="212" fill="#0284C7" font-size="13" font-weight="700">FK EventID</text><text x="800" y="212" fill="#64748B" font-size="12">: Int</text>
+              <text x="705" y="234" fill="#334155" font-size="13">CategoryName</text><text x="815" y="234" fill="#64748B" font-size="12">: String</text>
+              <text x="705" y="256" fill="#334155" font-size="13">DistanceKm</text><text x="800" y="256" fill="#64748B" font-size="12">: Decimal</text>
+              <text x="705" y="278" fill="#334155" font-size="13">EntryFeeZAR</text><text x="805" y="278" fill="#64748B" font-size="12">: Decimal</text>
+              <text x="705" y="300" fill="#334155" font-size="13">MaxCapacity</text><text x="800" y="300" fill="#64748B" font-size="12">: Int</text>
+              <text x="705" y="322" fill="#334155" font-size="13">StartTime</text><text x="785" y="322" fill="#64748B" font-size="12">: TimeSpan</text>
+              <text x="705" y="344" fill="#334155" font-size="13">CutoffHours</text><text x="800" y="344" fill="#64748B" font-size="12">: Decimal</text>
+            </g>
+
+            <!-- ENTITY 4: PARTICIPANT -->
+            <g filter="url(#shadow)">
+              <rect x="690" y="470" width="250" height="270" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+              <rect x="690" y="470" width="250" height="40" rx="10" fill="#D97706"/>
+              <rect x="690" y="500" width="250" height="10" fill="#D97706"/>
+              <text x="815" y="496" fill="#FFFFFF" font-size="16" font-weight="700" text-anchor="middle">PARTICIPANT</text>
+              <text x="705" y="530" fill="#F59E0B" font-size="13" font-weight="700">PK ParticipantID</text><text x="830" y="530" fill="#64748B" font-size="12">: Int</text>
+              <text x="705" y="552" fill="#334155" font-size="13">FirstName</text><text x="785" y="552" fill="#64748B" font-size="12">: String</text>
+              <text x="705" y="574" fill="#334155" font-size="13">LastName</text><text x="785" y="574" fill="#64748B" font-size="12">: String</text>
+              <text x="705" y="596" fill="#334155" font-size="13">SAIDOrPassport</text><text x="825" y="596" fill="#64748B" font-size="12">: String</text>
+              <text x="705" y="618" fill="#334155" font-size="13">Gender</text><text x="770" y="618" fill="#64748B" font-size="12">: String</text>
+              <text x="705" y="640" fill="#334155" font-size="13">ClubName</text><text x="785" y="640" fill="#64748B" font-size="12">: String</text>
+              <text x="705" y="662" fill="#334155" font-size="13">EmergencyPhone</text><text x="825" y="662" fill="#64748B" font-size="12">: String</text>
+              <text x="705" y="684" fill="#334155" font-size="13">Email</text><text x="755" y="684" fill="#64748B" font-size="12">: String</text>
+            </g>
+
+            <!-- ENTITY 5: ENTRY (Associative Entity) -->
+            <g filter="url(#shadow)">
+              <rect x="360" y="470" width="260" height="270" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+              <rect x="360" y="470" width="260" height="40" rx="10" fill="#7C3AED"/>
+              <rect x="360" y="500" width="260" height="10" fill="#7C3AED"/>
+              <text x="490" y="496" fill="#FFFFFF" font-size="16" font-weight="700" text-anchor="middle">ENTRY (Associative)</text>
+              <text x="375" y="530" fill="#F59E0B" font-size="13" font-weight="700">PK EntryID</text><text x="465" y="530" fill="#64748B" font-size="12">: Int</text>
+              <text x="375" y="552" fill="#0284C7" font-size="13" font-weight="700">FK ParticipantID</text><text x="500" y="552" fill="#64748B" font-size="12">: Int</text>
+              <text x="375" y="574" fill="#0284C7" font-size="13" font-weight="700">FK CategoryID</text><text x="485" y="574" fill="#64748B" font-size="12">: Int</text>
+              <text x="375" y="596" fill="#334155" font-size="13">BibNumber</text><text x="465" y="596" fill="#64748B" font-size="12">: String</text>
+              <text x="375" y="618" fill="#334155" font-size="13">RegistrationDate</text><text x="500" y="618" fill="#64748B" font-size="12">: DateTime</text>
+              <text x="375" y="640" fill="#334155" font-size="13">PaymentStatus</text><text x="485" y="640" fill="#64748B" font-size="12">: Enum</text>
+              <text x="375" y="662" fill="#334155" font-size="13">PaymentReference</text><text x="510" y="662" fill="#64748B" font-size="12">: String</text>
+              <text x="375" y="684" fill="#334155" font-size="13">MedicalNotes</text><text x="475" y="684" fill="#64748B" font-size="12">: String</text>
+            </g>
+
+            <!-- ENTITY 6: RESULT -->
+            <g filter="url(#shadow)">
+              <rect x="50" y="470" width="240" height="270" rx="10" fill="#FFFFFF" stroke="#CBD5E1" stroke-width="2"/>
+              <rect x="50" y="470" width="240" height="40" rx="10" fill="#DC2626"/>
+              <rect x="50" y="500" width="240" height="10" fill="#DC2626"/>
+              <text x="170" y="496" fill="#FFFFFF" font-size="16" font-weight="700" text-anchor="middle">RESULT</text>
+              <text x="65" y="530" fill="#F59E0B" font-size="13" font-weight="700">PK ResultID</text><text x="160" y="530" fill="#64748B" font-size="12">: Int</text>
+              <text x="65" y="552" fill="#0284C7" font-size="13" font-weight="700">FK EntryID (Unique)</text><text x="205" y="552" fill="#64748B" font-size="12">: Int</text>
+              <text x="65" y="574" fill="#334155" font-size="13">GunTime</text><text x="140" y="574" fill="#64748B" font-size="12">: TimeSpan</text>
+              <text x="65" y="596" fill="#334155" font-size="13">ChipTime</text><text x="140" y="596" fill="#64748B" font-size="12">: TimeSpan</text>
+              <text x="65" y="618" fill="#334155" font-size="13">OverallRank</text><text x="155" y="618" fill="#64748B" font-size="12">: Int</text>
+              <text x="65" y="640" fill="#334155" font-size="13">CategoryRank</text><text x="165" y="640" fill="#64748B" font-size="12">: Int</text>
+              <text x="65" y="662" fill="#334155" font-size="13">GenderRank</text><text x="160" y="662" fill="#64748B" font-size="12">: Int</text>
+              <text x="65" y="684" fill="#334155" font-size="13">Status</text><text x="120" y="684" fill="#64748B" font-size="12">: Enum</text>
+            </g>
+
+            <!-- RELATIONSHIP LINES -->
+            <path d="M 290 230 L 360 230" stroke="#475569" stroke-width="3.5" marker-end="url(#arrow)"/>
+            <rect x="300" y="208" width="45" height="20" rx="4" fill="#1E293B"/>
+            <text x="322" y="222" fill="#FFFFFF" font-size="12" font-weight="800" text-anchor="middle">1 : N</text>
+            <text x="325" y="245" fill="#0F172A" font-size="11" font-weight="700" text-anchor="middle">Organises</text>
+
+            <path d="M 620 230 L 690 230" stroke="#475569" stroke-width="3.5" marker-end="url(#arrow)"/>
+            <rect x="630" y="208" width="45" height="20" rx="4" fill="#0284C7"/>
+            <text x="652" y="222" fill="#FFFFFF" font-size="12" font-weight="800" text-anchor="middle">1 : N</text>
+            <text x="655" y="245" fill="#0F172A" font-size="11" font-weight="700" text-anchor="middle">Has Categories</text>
+
+            <path d="M 815 400 L 815 435 L 490 435 L 490 470" stroke="#475569" stroke-width="3.5" fill="none" marker-end="url(#arrow)"/>
+            <rect x="625" y="424" width="45" height="20" rx="4" fill="#059669"/>
+            <text x="647" y="438" fill="#FFFFFF" font-size="12" font-weight="800" text-anchor="middle">1 : N</text>
+
+            <path d="M 690 605 L 620 605" stroke="#475569" stroke-width="3.5" marker-end="url(#arrow)"/>
+            <rect x="630" y="583" width="45" height="20" rx="4" fill="#D97706"/>
+            <text x="652" y="597" fill="#FFFFFF" font-size="12" font-weight="800" text-anchor="middle">1 : N</text>
+            <text x="655" y="622" fill="#0F172A" font-size="11" font-weight="700" text-anchor="middle">Registers</text>
+
+            <path d="M 360 605 L 290 605" stroke="#475569" stroke-width="3.5" marker-end="url(#arrow)"/>
+            <rect x="295" y="583" width="55" height="20" rx="4" fill="#7C3AED"/>
+            <text x="322" y="597" fill="#FFFFFF" font-size="12" font-weight="800" text-anchor="middle">1 : 0..1</text>
+            <text x="325" y="622" fill="#0F172A" font-size="11" font-weight="700" text-anchor="middle">Generates</text>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Data Dictionary Grid -->
+      <h3 style="margin-bottom: 1rem; color: var(--accent-gold);">Data Dictionary &amp; Relationship Rules</h3>
+      <div class="data-dict-grid">
+        
+        <div class="entity-card">
+          <div class="entity-header">
+            <span class="entity-name">1. ORGANISER</span>
+            <span class="badge-pk">Parent Entity</span>
+          </div>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Represents event organizing bodies (e.g. CMA, Cape Town Cycle Tour Trust, Soweto AC).</p>
+          <table class="attr-table">
+            <tr><th>Attribute</th><th>Type</th><th>Key</th></tr>
+            <tr><td>OrganiserID</td><td>Int</td><td><span class="badge-pk">PK</span></td></tr>
+            <tr><td>OrganizationName</td><td>String</td><td>-</td></tr>
+            <tr><td>ContactEmail</td><td>String</td><td>-</td></tr>
+            <tr><td>Province</td><td>String</td><td>-</td></tr>
+          </table>
+          <div style="margin-top: 10px; font-size: 0.8rem; color: var(--accent-gold);">
+            <strong>Cardinality:</strong> 1 Organiser ── (1:N) ── N Events
+          </div>
+        </div>
+
+        <div class="entity-card">
+          <div class="entity-header">
+            <span class="entity-name">2. EVENT</span>
+            <span class="badge-pk">Core Entity</span>
+          </div>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">South African road running, cycling, or walking events (Comrades, Soweto Marathon, etc.).</p>
+          <table class="attr-table">
+            <tr><th>Attribute</th><th>Type</th><th>Key</th></tr>
+            <tr><td>EventID</td><td>Int</td><td><span class="badge-pk">PK</span></td></tr>
+            <tr><td>OrganiserID</td><td>Int</td><td><span class="badge-fk">FK</span></td></tr>
+            <tr><td>EventName</td><td>String</td><td>-</td></tr>
+            <tr><td>Location</td><td>String</td><td>-</td></tr>
+          </table>
+          <div style="margin-top: 10px; font-size: 0.8rem; color: var(--accent-gold);">
+            <strong>Cardinality:</strong> 1 Event ── (1:N) ── N Categories
+          </div>
+        </div>
+
+        <div class="entity-card">
+          <div class="entity-header">
+            <span class="entity-name">3. CATEGORY</span>
+            <span class="badge-pk">Sub-Entity</span>
+          </div>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Distance options, entry fees in ZAR, start times, and cutoffs (e.g., 89.8km Down Run, 109km Peninsula).</p>
+          <table class="attr-table">
+            <tr><th>Attribute</th><th>Type</th><th>Key</th></tr>
+            <tr><td>CategoryID</td><td>Int</td><td><span class="badge-pk">PK</span></td></tr>
+            <tr><td>EventID</td><td>Int</td><td><span class="badge-fk">FK</span></td></tr>
+            <tr><td>DistanceKm</td><td>Decimal</td><td>-</td></tr>
+            <tr><td>EntryFeeZAR</td><td>Decimal</td><td>-</td></tr>
+          </table>
+          <div style="margin-top: 10px; font-size: 0.8rem; color: var(--accent-gold);">
+            <strong>Cardinality:</strong> 1 Category ── (1:N) ── N Entries
+          </div>
+        </div>
+
+        <div class="entity-card">
+          <div class="entity-header">
+            <span class="entity-name">4. PARTICIPANT</span>
+            <span class="badge-pk">Athlete Entity</span>
+          </div>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Registered runner/cyclist profile containing SA ID/Passport, club affiliation, and emergency contacts.</p>
+          <table class="attr-table">
+            <tr><th>Attribute</th><th>Type</th><th>Key</th></tr>
+            <tr><td>ParticipantID</td><td>Int</td><td><span class="badge-pk">PK</span></td></tr>
+            <tr><td>FirstName / LastName</td><td>String</td><td>-</td></tr>
+            <tr><td>SAIDOrPassport</td><td>String</td><td>-</td></tr>
+            <tr><td>ClubName</td><td>String</td><td>-</td></tr>
+          </table>
+          <div style="margin-top: 10px; font-size: 0.8rem; color: var(--accent-gold);">
+            <strong>Cardinality:</strong> 1 Participant ── (1:N) ── N Entries
+          </div>
+        </div>
+
+        <div class="entity-card">
+          <div class="entity-header">
+            <span class="entity-name">5. ENTRY</span>
+            <span class="badge-pk">Associative M:N</span>
+          </div>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Resolves Many-to-Many relationship between Athletes and Categories. Holds Bib Number &amp; Payment info.</p>
+          <table class="attr-table">
+            <tr><th>Attribute</th><th>Type</th><th>Key</th></tr>
+            <tr><td>EntryID</td><td>Int</td><td><span class="badge-pk">PK</span></td></tr>
+            <tr><td>ParticipantID</td><td>Int</td><td><span class="badge-fk">FK</span></td></tr>
+            <tr><td>CategoryID</td><td>Int</td><td><span class="badge-fk">FK</span></td></tr>
+            <tr><td>BibNumber</td><td>String</td><td>-</td></tr>
+          </table>
+          <div style="margin-top: 10px; font-size: 0.8rem; color: var(--accent-gold);">
+            <strong>Cardinality:</strong> 1 Entry ── (1:0..1) ── 1 Result
+          </div>
+        </div>
+
+        <div class="entity-card">
+          <div class="entity-header">
+            <span class="entity-name">6. RESULT</span>
+            <span class="badge-pk">Race Day Timing</span>
+          </div>
+          <p style="font-size: 0.85rem; color: var(--text-muted); margin-bottom: 1rem;">Official timing results, gun time, chip time, overall/category/gender rankings, and status.</p>
+          <table class="attr-table">
+            <tr><th>Attribute</th><th>Type</th><th>Key</th></tr>
+            <tr><td>ResultID</td><td>Int</td><td><span class="badge-pk">PK</span></td></tr>
+            <tr><td>EntryID</td><td>Int</td><td><span class="badge-fk">FK (Unique)</span></td></tr>
+            <tr><td>GunTime / ChipTime</td><td>TimeSpan</td><td>-</td></tr>
+            <tr><td>OverallRank</td><td>Int</td><td>-</td></tr>
+          </table>
+          <div style="margin-top: 10px; font-size: 0.8rem; color: var(--accent-gold);">
+            <strong>Cardinality:</strong> 1 Result belongs to exactly 1 Entry
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- TAB 2: BROWSE EVENTS -->
+    <section id="tab-events" class="tab-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+        <h2>Upcoming Road Events in South Africa</h2>
+        <div style="display: flex; gap: 10px;">
+          <button class="nav-btn active" onclick="filterProvince('All')">All Provinces</button>
+          <button class="nav-btn" onclick="filterProvince('KwaZulu-Natal')">KZN</button>
+          <button class="nav-btn" onclick="filterProvince('Western Cape')">Western Cape</button>
+          <button class="nav-btn" onclick="filterProvince('Gauteng')">Gauteng</button>
+        </div>
+      </div>
+
+      <div class="events-grid" id="events-list">
+        <!-- Rendered via JS -->
+      </div>
+    </section>
+
+    <!-- TAB 3: REGISTER ATHLETE -->
+    <section id="tab-register" class="tab-content">
+      <div class="form-card">
+        <h2 style="margin-bottom: 0.5rem; text-align: center;">Enter a Race Day Event</h2>
+        <p style="color: var(--text-muted); text-align: center; margin-bottom: 1.5rem;">Complete participant entry and allocate your official race bib number.</p>
+        
+        <form id="entry-form" onsubmit="handleRegister(event)">
+          <div class="form-group">
+            <label>Select Athlete Profile</label>
+            <select id="reg-participant-id" class="form-control" required>
+              <!-- Filled via JS -->
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Select Race Category</label>
+            <select id="reg-category-id" class="form-control" required>
+              <!-- Filled via JS -->
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Medical Notes / Allergies (Optional)</label>
+            <textarea id="reg-medical" class="form-control" rows="3" placeholder="e.g. Asthma, Penicillin allergy"></textarea>
+          </div>
+
+          <button type="submit" class="action-btn gold" style="width: 100%; justify-content: center;">
+            🏁 Confirm &amp; Issue Race Bib
+          </button>
+        </form>
+      </div>
+
+      <div style="margin-top: 2rem;">
+        <h3 style="margin-bottom: 1rem;">Active Race Registrations</h3>
+        <div class="table-responsive">
+          <table class="custom-table">
+            <thead>
+              <tr>
+                <th>Entry ID</th>
+                <th>Bib Number</th>
+                <th>Participant</th>
+                <th>Event</th>
+                <th>Category</th>
+                <th>Payment Status</th>
+                <th>Reg Date</th>
+              </tr>
+            </thead>
+            <tbody id="entries-table-body">
+              <!-- Filled via JS -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: ORGANISER PORTAL -->
+    <section id="tab-organiser" class="tab-content">
+      <div class="form-card">
+        <h2 style="margin-bottom: 0.5rem; text-align: center;">Organiser: Create New Event</h2>
+        <p style="color: var(--text-muted); text-align: center; margin-bottom: 1.5rem;">Add a road running, walking, or cycling event to RaceDay.ZA.</p>
+
+        <form id="create-event-form" onsubmit="handleCreateEvent(event)">
+          <div class="form-group">
+            <label>Event Name</label>
+            <input type="text" id="ev-name" class="form-control" placeholder="e.g. Two Oceans Ultra Marathon 2026" required>
+          </div>
+
+          <div class="form-group">
+            <label>Event Type</label>
+            <select id="ev-type" class="form-control" required>
+              <option value="Running">Road Running</option>
+              <option value="Cycling">Road Cycling</option>
+              <option value="Walking">Community Walk / Trail</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Event Date</label>
+            <input type="date" id="ev-date" class="form-control" required>
+          </div>
+
+          <div class="form-group">
+            <label>Location &amp; Route</label>
+            <input type="text" id="ev-location" class="form-control" placeholder="e.g. Newlands to Umlazi / Rondebosch" required>
+          </div>
+
+          <div class="form-group">
+            <label>Province</label>
+            <select id="ev-province" class="form-control" required>
+              <option value="Western Cape">Western Cape</option>
+              <option value="KwaZulu-Natal">KwaZulu-Natal</option>
+              <option value="Gauteng">Gauteng</option>
+              <option value="Eastern Cape">Eastern Cape</option>
+              <option value="Free State">Free State</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label>Banner Image URL</label>
+            <input type="url" id="ev-banner" class="form-control" value="https://images.unsplash.com/photo-1452626038306-9aae5e071dd3?auto=format&fit=crop&w=1200&q=80">
+          </div>
+
+          <button type="submit" class="action-btn" style="width: 100%; justify-content: center;">
+            ➕ Publish New Event
+          </button>
+        </form>
+      </div>
+    </section>
+
+    <!-- TAB 5: RESULTS -->
+    <section id="tab-results" class="tab-content">
+      <h2 style="margin-bottom: 1rem;">Leaderboards &amp; Official Timing Results</h2>
+      <div class="table-responsive">
+        <table class="custom-table">
+          <thead>
+            <tr>
+              <th>Rank</th>
+              <th>Bib #</th>
+              <th>Athlete Name</th>
+              <th>Event</th>
+              <th>Category</th>
+              <th>Gun Time</th>
+              <th>Chip Time</th>
+              <th>Status / Medal</th>
+            </tr>
+          </thead>
+          <tbody id="results-table-body">
+            <!-- Filled via JS -->
+          </tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast"></div>
+
+  <script src="app.js"></script>
+</body>
+</html>
