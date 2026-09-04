@@ -187,8 +187,6 @@ The repository is configured with a GitHub Actions workflow located at [`.github
 ---
 
 ## 7. Video Presentation Link
-* **Unlisted YouTube Video URL**: `https://youtu.be/YourUnlistedVideoIdHere` *(Replace with your unlisted YouTube recording link before final submission)*
-* **Video Presentation Content Covered**:
   1. Introduction to the South African road event problem space.
   2. Detailed walkthrough of the 7-entity ERD model, foreign key constraints, and cardinalities.
   3. Review of the RESTful API Endpoint Plan across all 6 required functional modules.
