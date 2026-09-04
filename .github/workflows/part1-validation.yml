@@ -30,7 +30,7 @@ jobs:
           echo "Checking for required Part 1 files..."
 
           # A — ERD (PNG or PDF)
-          if ls docs/*ERD*.pdf docs/*ERD*.png docs/*erd*.pdf docs/*erd*.png 1>/dev/null 2>&1; then
+          if ls docs/*ERD*.pdf 1>/dev/null 2>&1 || ls docs/*ERD*.png 1>/dev/null 2>&1 || ls docs/*erd*.pdf 1>/dev/null 2>&1 || ls docs/*erd*.png 1>/dev/null 2>&1; then
             echo "ERD image (PNG or PDF) found."
           else
             echo "::error::ERD missing in /docs — upload RaceDay_ERD.png or RaceDay_ERD.pdf"
@@ -38,7 +38,7 @@ jobs:
           fi
 
           # B — API Endpoint Plan (MD or PDF)
-          if ls docs/API_Endpoint_Plan.md docs/*Endpoint*.pdf docs/*endpoint*.md 1>/dev/null 2>&1; then
+          if ls docs/API_Endpoint_Plan.md 1>/dev/null 2>&1 || ls docs/*Endpoint*.pdf 1>/dev/null 2>&1 || ls docs/*endpoint*.md 1>/dev/null 2>&1 || ls docs/*Endpoint*.md 1>/dev/null 2>&1; then
             echo "API Endpoint Plan found."
           else
             echo "::error::API Endpoint Plan missing — add /docs/API_Endpoint_Plan.md"
@@ -46,8 +46,8 @@ jobs:
           fi
 
           # C — SQL Database Script
-          if ls docs/*_DB_Script.sql docs/*.sql 1>/dev/null 2>&1; then
-            echo "✅ SQL Database Script found."
+          if ls docs/*_DB_Script.sql 1>/dev/null 2>&1 || ls docs/*.sql 1>/dev/null 2>&1; then
+            echo "SQL Database Script found."
           else
             echo "::error::SQL script missing — add /docs/RaceDay_DB_Script.sql"
             ERR=1
@@ -57,7 +57,7 @@ jobs:
 
       - name: "3. Endpoint plan has all 6 required columns + all 6 domains"
         run: |
-          FILE=$(ls docs/API_Endpoint_Plan.md docs/*Endpoint*.md 2>/dev/null | head -1)
+          FILE=$(ls docs/API_Endpoint_Plan.md docs/*Endpoint*.md docs/*endpoint*.md 2>/dev/null | head -1)
           if [ -z "$FILE" ]; then
             echo "::warning::Skipping endpoint-plan lint — no .md endpoint plan."
             exit 0
@@ -108,7 +108,7 @@ jobs:
 
           PK=$(grep -ciE 'PRIMARY KEY' "$FILE" || true)
           FK=$(grep -ciE 'FOREIGN KEY' "$FILE" || true)
-          echo " PRIMARY KEY: $PK / FOREIGN KEY: $FK"
+          echo "PRIMARY KEY: $PK / FOREIGN KEY: $FK"
           [ "$PK" -ge 6 ] || (echo "::error::PRIMARY KEY count < 6"; exit 1)
           [ "$FK" -ge 5 ] || (echo "::warning::FOREIGN KEY count looks low ($FK < 5) — are all relationships represented?"; true)
 
@@ -116,7 +116,7 @@ jobs:
           ORGS=$(grep -cE 'Organisers.*INSERT|INSERT.*Organisers' "$FILE" || true)
           PARTS=$(grep -cE 'Participants.*INSERT|INSERT.*Participants' "$FILE" || true)
           EVENTS=$(grep -cE 'Events.*INSERT|INSERT.*Events' "$FILE" || true)
-          echo " INSERT INTO blocks found (approx): Organisers=$ORGS Participants=$PARTS Events=$EVENTS"
+          echo "INSERT INTO blocks found (approx): Organisers=$ORGS Participants=$PARTS Events=$EVENTS"
 
           # Count seed rows in VALUES blocks by counting "(1," / "(2," etc. patterns
           ORG_ROWS=$(awk '/INSERT.*Organisers/,/;/' "$FILE" | grep -ocE '\([0-9]+,' || true)
@@ -152,7 +152,7 @@ jobs:
         run: |
           echo "Part 1 repository structure validated successfully."
           echo "/docs folder present"
-          echo " ERD, API plan, SQL script present"
-          echo " SQL ≥ 6 tables with seed data (2+ Organisers, 2+ Participants, 3+ Events)"
-          echo " API endpoint plan has all 6 required columns"
-          echo " README.md exists"
+          echo "ERD, API plan, SQL script present"
+          echo "SQL ≥ 6 tables with seed data (2+ Organisers, 2+ Participants, 3+ Events)"
+          echo "API endpoint plan has all 6 required columns"
+          echo "README.md exists"
