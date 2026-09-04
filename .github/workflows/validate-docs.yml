@@ -1,0 +1,83 @@
+name: RaceDay Part 1 - Documentation & Schema Validation CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  validate-part1-deliverables:
+    name: Verify Docs, ERD, API Plan & SQL Script
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Verify /docs Directory Existence
+        run: |
+          if [ ! -d "docs" ]; then
+            echo "::error ::The required /docs directory is missing from repository root!"
+            exit 1
+          fi
+          echo "Found /docs directory successfully."
+
+      - name: Verify Entity-Relationship Diagram (ERD) Files
+        run: |
+          ERD_EXISTS=false
+          if [ -f "docs/RaceDay_ERD.png" ] || [ -f "docs/RaceDay_ERD.pdf" ] || [ -f "docs/RaceDay_ERD.svg" ]; then
+            ERD_EXISTS=true
+            echo "ERD visual asset found in /docs."
+          fi
+          if [ "$ERD_EXISTS" = false ]; then
+            echo "::error ::ERD image or PDF (RaceDay_ERD.png / RaceDay_ERD.pdf) is missing in /docs!"
+            exit 1
+          fi
+
+      - name: Verify API Endpoint Plan Document
+        run: |
+          if [ ! -f "docs/api_endpoint_plan.md" ]; then
+            echo "::error ::API Endpoint Plan (api_endpoint_plan.md) is missing in /docs!"
+            exit 1
+          fi
+          echo "API Endpoint Plan document verified successfully."
+
+      - name: Verify SQL Database Script
+        run: |
+          if [ ! -f "docs/RaceDay_Database.sql" ] && [ ! -f "docs/raceday_database_schema.sql" ]; then
+            echo "::error ::SQL Database script is missing in /docs!"
+            exit 1
+          fi
+          echo "SQL Database script verified successfully."
+
+      - name: Validate SQL Script Table & Constraint Syntax
+        run: |
+          SQL_FILE="docs/RaceDay_Database.sql"
+          if [ ! -f "$SQL_FILE" ]; then
+            SQL_FILE="docs/raceday_database_schema.sql"
+          fi
+          
+          echo "Checking mandatory entities in $SQL_FILE..."
+          grep -i "CREATE TABLE.*Users" "$SQL_FILE" || { echo "::error ::Users table missing in SQL script"; exit 1; }
+          grep -i "CREATE TABLE.*Organisers" "$SQL_FILE" || { echo "::error ::Organisers table missing in SQL script"; exit 1; }
+          grep -i "CREATE TABLE.*Participants" "$SQL_FILE" || { echo "::error ::Participants table missing in SQL script"; exit 1; }
+          grep -i "CREATE TABLE.*Events" "$SQL_FILE" || { echo "::error ::Events table missing in SQL script"; exit 1; }
+          grep -i "CREATE TABLE.*Categories" "$SQL_FILE" || { echo "::error ::Categories table missing in SQL script"; exit 1; }
+          grep -i "CREATE TABLE.*Entries" "$SQL_FILE" || { echo "::error ::Entries table missing in SQL script"; exit 1; }
+          grep -i "CREATE TABLE.*Results" "$SQL_FILE" || { echo "::error ::Results table missing in SQL script"; exit 1; }
+
+          echo "Checking realistic South African seed data..."
+          grep -i "Comrades Marathon" "$SQL_FILE" || { echo "::error ::Comrades Marathon seed data missing"; exit 1; }
+          grep -i "Cape Town Cycle Tour" "$SQL_FILE" || { echo "::error ::Cape Town Cycle Tour seed data missing"; exit 1; }
+          grep -i "Soweto Marathon" "$SQL_FILE" || { echo "::error ::Soweto Marathon seed data missing"; exit 1; }
+          
+          echo "All Part 1 verification checks passed successfully!"
+
+      - name: Documentation Summary Status
+        run: |
+          echo "========================================================"
+          echo "  RaceDay Part 1 CI Build: ALL CHECKS PASSED (GREEN)  "
+          echo "========================================================"
+          ls -la docs/
