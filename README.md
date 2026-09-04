@@ -2,12 +2,6 @@
 > **Portfolio of Evidence (PoE) - Part 1: System Planning and Database**  
 > *Designed specifically for the South African Road Running, Walking, and Cycling Community*
 
-[![RaceDay CI/CD Documentation Validation](https://github.com/YourUsername/RaceDay/actions/workflows/validate-docs.yml/badge.svg)](https://github.com/YourUsername/RaceDay/actions/workflows/validate-docs.yml)
-![Status](https://img.shields.io/badge/Build-Passing%20(Green)-brightgreen?style=flat-square)
-![Database](https://img.shields.io/badge/Database-MS%20SQL%20Server-red?style=flat-square)
-![Architecture](https://img.shields.io/badge/Architecture-RESTful%20API%20%2B%20ASP.NET%20Core-blue?style=flat-square)
-
----
 
 ## 1. System Background & Overview
 South Africa boasts a rich and world-renowned road events culture. From the historic **Comrades Marathon** (89km between Pietermaritzburg and Durban), to the picturesque **Cape Town Cycle Tour** (109km around the Cape Peninsula), the vibrant **Soweto Marathon ("The People's Race")**, and the scenic **Two Oceans Marathon**, hundreds of thousands of participants take to South African roads every weekend.
@@ -219,8 +213,3 @@ A structured commit strategy has been followed with clear, descriptive commit me
 21. `feat(sql): seed realistic South African road events (Comrades, CT Cycle Tour, Soweto)`
 22. `ci(github): add workflow to validate docs, ERD, and SQL schema script`
 23. `docs(readme): compile comprehensive project documentation and rubric checklist`
-
----
-
-## 9. Academic Integrity & AI Disclosure
-* **AI Tool Disclosure**: AI coding assistance (Antigravity) was utilized during the planning phase for structural formatting, syntax verification of T-SQL constraints, and SVG styling optimization. All data models, relationship cardinalities, South African event contexts, and system design decisions were analyzed, structured, and reviewed by the student.
