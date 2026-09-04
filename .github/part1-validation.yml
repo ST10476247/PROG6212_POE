@@ -1,0 +1,158 @@
+name: RaceDay Part 1 — Docs & Structure Validation
+
+on:
+  push:
+    branches: [ main, master ]
+    paths-ignore:
+      - '**/Part2/**'
+      - '**/Part3/**'
+  pull_request:
+    branches: [ main, master ]
+  workflow_dispatch:
+
+jobs:
+  validate-part1:
+    name: Validate Part 1 deliverables
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: "1. Required /docs folder exists"
+        run: |
+          test -d docs || (echo "::error::Missing /docs folder at repo root." && exit 1)
+          echo "/docs folder found."
+
+      - name: "2. Required documents present in /docs"
+        run: |
+          ERR=0
+          echo "Checking for required Part 1 files..."
+
+          # A — ERD (PNG or PDF)
+          if ls docs/*ERD*.pdf docs/*ERD*.png docs/*erd*.pdf docs/*erd*.png 1>/dev/null 2>&1; then
+            echo "ERD image (PNG or PDF) found."
+          else
+            echo "::error::ERD missing in /docs — upload RaceDay_ERD.png or RaceDay_ERD.pdf"
+            ERR=1
+          fi
+
+          # B — API Endpoint Plan (MD or PDF)
+          if ls docs/API_Endpoint_Plan.md docs/*Endpoint*.pdf docs/*endpoint*.md 1>/dev/null 2>&1; then
+            echo "API Endpoint Plan found."
+          else
+            echo "::error::API Endpoint Plan missing — add /docs/API_Endpoint_Plan.md"
+            ERR=1
+          fi
+
+          # C — SQL Database Script
+          if ls docs/*_DB_Script.sql docs/*.sql 1>/dev/null 2>&1; then
+            echo "✅ SQL Database Script found."
+          else
+            echo "::error::SQL script missing — add /docs/RaceDay_DB_Script.sql"
+            ERR=1
+          fi
+
+          exit $ERR
+
+      - name: "3. Endpoint plan has all 6 required columns + all 6 domains"
+        run: |
+          FILE=$(ls docs/API_Endpoint_Plan.md docs/*Endpoint*.md 2>/dev/null | head -1)
+          if [ -z "$FILE" ]; then
+            echo "::warning::Skipping endpoint-plan lint — no .md endpoint plan."
+            exit 0
+          fi
+          echo "Linting $FILE..."
+
+          ERR=0
+          # Required columns (case-insensitive)
+          for col in "HTTP Method" "Route" "Description" "Role required" "Request body" "Expected response"; do
+            if ! grep -qiF "$col" "$FILE"; then
+              echo "::error::Endpoint plan missing required column/heading: '$col'"
+              ERR=1
+            fi
+          done
+
+          # Required endpoint domains
+          for domain in "auth" "register" "login" "profile" "events" "categor" "enrol" "result"; do
+            if ! grep -qiF "$domain" "$FILE"; then
+              echo "::warning::Domain keyword '$domain' not seen in endpoint plan — double-check coverage."
+            fi
+          done
+
+          # Count rows that look like endpoints (begin with POST/GET/PUT/DELETE)
+          ROWS=$(grep -cE '^\| *(POST|GET|PUT|PATCH|DELETE)' "$FILE" || true)
+          echo "Rows that look like endpoints: $ROWS"
+          if [ "$ROWS" -lt 20 ]; then
+            echo "::warning::Endpoint row count ($ROWS) looks low — target 25+ for Part 1."
+          fi
+
+          [ $ERR -eq 0 ] && echo "Endpoint plan columns OK."
+          exit $ERR
+
+      - name: "4. SQL script syntax smoke check — CREATE TABLE count ≥ 6"
+        run: |
+          FILE=$(ls docs/*_DB_Script.sql docs/*.sql 2>/dev/null | head -1)
+          if [ -z "$FILE" ]; then
+            echo "::error::No .sql file found in /docs"
+            exit 1
+          fi
+          echo "Inspecting $FILE ..."
+
+          TABLES=$(grep -ciE 'CREATE TABLE' "$FILE" || true)
+          echo "CREATE TABLE statements: $TABLES"
+          if [ "$TABLES" -lt 6 ]; then
+            echo "::error::Less than 6 CREATE TABLE statements — ERD requires ≥ 6 entities."
+            exit 1
+          fi
+
+          PK=$(grep -ciE 'PRIMARY KEY' "$FILE" || true)
+          FK=$(grep -ciE 'FOREIGN KEY' "$FILE" || true)
+          echo " PRIMARY KEY: $PK / FOREIGN KEY: $FK"
+          [ "$PK" -ge 6 ] || (echo "::error::PRIMARY KEY count < 6"; exit 1)
+          [ "$FK" -ge 5 ] || (echo "::warning::FOREIGN KEY count looks low ($FK < 5) — are all relationships represented?"; true)
+
+          # Seed data minimums
+          ORGS=$(grep -cE 'Organisers.*INSERT|INSERT.*Organisers' "$FILE" || true)
+          PARTS=$(grep -cE 'Participants.*INSERT|INSERT.*Participants' "$FILE" || true)
+          EVENTS=$(grep -cE 'Events.*INSERT|INSERT.*Events' "$FILE" || true)
+          echo " INSERT INTO blocks found (approx): Organisers=$ORGS Participants=$PARTS Events=$EVENTS"
+
+          # Count seed rows in VALUES blocks by counting "(1," / "(2," etc. patterns
+          ORG_ROWS=$(awk '/INSERT.*Organisers/,/;/' "$FILE" | grep -ocE '\([0-9]+,' || true)
+          PAR_ROWS=$(awk '/INSERT.*Participants/,/;/' "$FILE" | grep -ocE '\([0-9]+,' || true)
+          EVT_ROWS=$(awk '/INSERT.*Events/,/;/' "$FILE" | grep -ocE '\([0-9]+,' || true)
+          echo "Seed rows: Organisers=$ORG_ROWS (req ≥2), Participants=$PAR_ROWS (≥2), Events=$EVT_ROWS (≥3)"
+
+          FAIL=0
+          [ "${ORG_ROWS:-0}" -ge 2 ] || (echo "::error::Seed data — < 2 Organisers"; FAIL=1)
+          [ "${PAR_ROWS:-0}" -ge 2 ] || (echo "::error::Seed data — < 2 Participants"; FAIL=1)
+          [ "${EVT_ROWS:-0}" -ge 3 ] || (echo "::error::Seed data — < 3 Events"; FAIL=1)
+          [ $FAIL -eq 0 ] || exit 1
+
+          echo "SQL script basic checks passed."
+
+      - name: "5. README exists with required sections"
+        run: |
+          if [ ! -f README.md ]; then
+            echo "::error::README.md missing at repo root."
+            exit 1
+          fi
+          echo "README.md exists."
+          ERR=0
+          for section in "README" "RaceDay" "Organiser" "Participant" "YouTube" "video" "CI"; do
+            if ! grep -qiF "$section" README.md; then
+              echo "::warning::README missing keyword '$section' — check rubric coverage."
+            fi
+          done
+          echo "README lint complete."
+          exit 0
+
+      - name: Summary
+        run: |
+          echo "Part 1 repository structure validated successfully."
+          echo "/docs folder present"
+          echo " ERD, API plan, SQL script present"
+          echo " SQL ≥ 6 tables with seed data (2+ Organisers, 2+ Participants, 3+ Events)"
+          echo " API endpoint plan has all 6 required columns"
+          echo " README.md exists"
