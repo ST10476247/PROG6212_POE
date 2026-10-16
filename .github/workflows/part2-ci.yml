@@ -1,0 +1,57 @@
+name: RaceDay Part 2 - RESTful API & Unit Tests CI
+
+on:
+  push:
+    branches: [ main, master, part2 ]
+  pull_request:
+    branches: [ main, master, part2 ]
+  workflow_dispatch:
+
+jobs:
+  build-and-test:
+    name: Build API & Run Unit Tests (.NET 8 LTS)
+    runs-on: ubuntu-latest
+
+    env:
+      DOTNET_CLI_TELEMETRY_OPTOUT: 1
+      DOTNET_SKIP_FIRST_TIME_EXPERIENCE: 1
+      USE_INMEMORY_DB: "true"
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup .NET SDK (8.0.x)
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Verify Solution & Projects
+        run: |
+          echo "Verifying solution structure..."
+          ls -la
+          test -f "RaceDay.sln" || test -f "RaceDay.slnx"
+          test -d "RaceDay.API"
+          test -d "RaceDay.Tests"
+
+      - name: Restore NuGet Dependencies
+        run: dotnet restore RaceDay.sln
+
+      - name: Build Solution (Release)
+        run: dotnet build RaceDay.sln --configuration Release --no-restore
+
+      - name: Execute Unit Tests (xUnit)
+        run: |
+          dotnet test RaceDay.sln \
+            --configuration Release \
+            --no-build \
+            --verbosity normal \
+            --logger "trx;LogFileName=test_results.trx"
+
+      - name: Upload Test Results Artifact
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: "**/test_results.trx"
+          if-no-files-found: ignore
