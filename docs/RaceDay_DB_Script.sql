@@ -1,378 +1,441 @@
--- ============================================================================
--- Project: RaceDay - Full-Stack Event Management System
--- Part 1: Relational Database Schema and Seed Data Script
--- Author: ST10476247 (RaceDay Project Portfolio of Evidence)
--- Description: Complete T-SQL schema creation and data population script
---              for South African road running, walking, and cycling events.
--- Target RDBMS: Microsoft SQL Server 2019 / 2022 / Azure SQL Database
--- ============================================================================
+/* =========================================================
+   RaceDay — Part 1 Database Script
+   Target:  SQL Server (SSMS / MS SQL)
+   Author:  PROG6212 PoE
+   Entities: 8  (Users, Organisers, Participants, Events,
+                  EventCategories, EventEnrolments, Results,
+                  WeatherSnapshots)
+   Usage:  Open in SSMS, connect to your SQL instance,
+           make sure no RaceDay DB exists, then execute.
+   ========================================================= */
+
+PRINT '==================================================';
+PRINT '  RaceDay PoE Part 1 - Database Script';
+PRINT '==================================================';
+GO
+
+SET NOCOUNT ON;
+SET XACT_ABORT ON;
+GO
 
 USE master;
 GO
 
--- 1. DATABASE CREATION (Safe conditional recreation)
-IF NOT EXISTS (SELECT name FROM sys.databases WHERE name = N'RaceDayDB')
+IF DB_ID('RaceDay') IS NOT NULL
 BEGIN
-    CREATE DATABASE RaceDayDB;
-    PRINT 'Database [RaceDayDB] created successfully.';
-END
-ELSE
-BEGIN
-    PRINT 'Database [RaceDayDB] already exists. Using existing database.';
+    PRINT 'Dropping existing RaceDay database...';
+    ALTER DATABASE [RaceDay] SET SINGLE_USER WITH ROLLBACK IMMEDIATE;
+    DROP DATABASE [RaceDay];
 END
 GO
 
-USE RaceDayDB;
-GO
-
--- 2. DROP TABLES IN REVERSE DEPENDENCY ORDER (For clean idempotent execution)
-IF OBJECT_ID('dbo.Results', 'U') IS NOT NULL DROP TABLE dbo.Results;
-IF OBJECT_ID('dbo.Entries', 'U') IS NOT NULL DROP TABLE dbo.Entries;
-IF OBJECT_ID('dbo.Categories', 'U') IS NOT NULL DROP TABLE dbo.Categories;
-IF OBJECT_ID('dbo.Events', 'U') IS NOT NULL DROP TABLE dbo.Events;
-IF OBJECT_ID('dbo.Participants', 'U') IS NOT NULL DROP TABLE dbo.Participants;
-IF OBJECT_ID('dbo.Organisers', 'U') IS NOT NULL DROP TABLE dbo.Organisers;
-IF OBJECT_ID('dbo.Users', 'U') IS NOT NULL DROP TABLE dbo.Users;
-GO
-
-PRINT 'Existing tables dropped successfully.';
-GO
-
--- ============================================================================
--- 3. SCHEMA DEFINITIONS (7 Core Entities matching ERD)
--- ============================================================================
-
--- ENTITY 1: Users (Authentication, Credentials, and System Roles)
-CREATE TABLE dbo.Users (
-    UserID INT IDENTITY(1,1) NOT NULL,
-    Email NVARCHAR(150) NOT NULL,
-    PasswordHash NVARCHAR(256) NOT NULL,
-    Role NVARCHAR(20) NOT NULL,
-    CreatedAt DATETIME2(7) NOT NULL CONSTRAINT DF_Users_CreatedAt DEFAULT SYSUTCDATETIME(),
-    IsActive BIT NOT NULL CONSTRAINT DF_Users_IsActive DEFAULT 1,
-    
-    CONSTRAINT PK_Users PRIMARY KEY CLUSTERED (UserID ASC),
-    CONSTRAINT UQ_Users_Email UNIQUE (Email),
-    CONSTRAINT CK_Users_Role CHECK (Role IN ('Organiser', 'Participant', 'Admin'))
+CREATE DATABASE [RaceDay]
+ ON  PRIMARY
+(
+    NAME      = N'RaceDay_Data',
+    FILENAME  = N'C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\DATA\RaceDay.mdf',
+    SIZE      = 8 MB,
+    FILEGROWTH = 64 MB
+)
+ LOG ON
+(
+    NAME      = N'RaceDay_Log',
+    FILENAME  = N'C:\Program Files\Microsoft SQL Server\MSSQL16.MSSQLSERVER\MSSQL\DATA\RaceDay_log.ldf',
+    SIZE      = 8 MB,
+    FILEGROWTH = 64 MB
 );
 GO
 
--- ENTITY 2: Organisers (Event Host Organisations & Club Officials)
-CREATE TABLE dbo.Organisers (
-    OrganiserID INT IDENTITY(1,1) NOT NULL,
-    UserID INT NOT NULL,
-    OrganizationName NVARCHAR(150) NOT NULL,
-    ContactEmail NVARCHAR(150) NOT NULL,
-    Phone NVARCHAR(25) NOT NULL,
-    Province NVARCHAR(50) NOT NULL,
-    IsVerified BIT NOT NULL CONSTRAINT DF_Organisers_IsVerified DEFAULT 1,
-    CreatedAt DATETIME2(7) NOT NULL CONSTRAINT DF_Organisers_CreatedAt DEFAULT SYSUTCDATETIME(),
+PRINT 'Database [RaceDay] created.';
+GO
 
-    CONSTRAINT PK_Organisers PRIMARY KEY CLUSTERED (OrganiserID ASC),
-    CONSTRAINT UQ_Organisers_UserID UNIQUE (UserID),
-    CONSTRAINT FK_Organisers_Users FOREIGN KEY (UserID) 
-        REFERENCES dbo.Users (UserID) ON DELETE CASCADE,
-    CONSTRAINT CK_Organisers_Province CHECK (Province IN (
-        'Eastern Cape', 'Free State', 'Gauteng', 'KwaZulu-Natal',
-        'Limpopo', 'Mpumalanga', 'Northern Cape', 'North West', 'Western Cape'
-    ))
+USE [RaceDay];
+GO
+
+/* =========================================================
+   1. Users   — shared authentication for Organisers & Participants
+   ========================================================= */
+CREATE TABLE [dbo].[Users] (
+    [UserId]        INT IDENTITY(1,1) NOT NULL,
+    [Email]         NVARCHAR(255) NOT NULL,
+    [PasswordHash]  NVARCHAR(255) NOT NULL,
+    [Role]          NVARCHAR(20)  NOT NULL,
+    [FullName]      NVARCHAR(150) NOT NULL,
+    [PhoneNumber]   NVARCHAR(20)  NULL,
+    [Province]      NVARCHAR(50)  NULL,
+    [CreatedAt]     DATETIME2(3)  NOT NULL
+        CONSTRAINT [DF_Users_CreatedAt] DEFAULT (SYSDATETIME()),
+    CONSTRAINT [PK_Users] PRIMARY KEY CLUSTERED ([UserId] ASC),
+    CONSTRAINT [UK_Users_Email] UNIQUE NONCLUSTERED ([Email] ASC),
+    CONSTRAINT [CK_Users_Role] CHECK ([Role] IN ('Organiser','Participant'))
 );
 GO
+PRINT 'Table [Users] created.';
 
--- ENTITY 3: Participants (Athletes, Runners, Walkers, and Cyclists)
-CREATE TABLE dbo.Participants (
-    ParticipantID INT IDENTITY(1,1) NOT NULL,
-    UserID INT NOT NULL,
-    FirstName NVARCHAR(75) NOT NULL,
-    LastName NVARCHAR(75) NOT NULL,
-    SAIDOrPassport NVARCHAR(30) NOT NULL,
-    Gender NVARCHAR(10) NOT NULL,
-    DateOfBirth DATE NOT NULL,
-    ClubName NVARCHAR(100) NULL,
-    EmergencyPhone NVARCHAR(25) NOT NULL,
-    Email NVARCHAR(150) NOT NULL,
-
-    CONSTRAINT PK_Participants PRIMARY KEY CLUSTERED (ParticipantID ASC),
-    CONSTRAINT UQ_Participants_UserID UNIQUE (UserID),
-    CONSTRAINT UQ_Participants_SAIDOrPassport UNIQUE (SAIDOrPassport),
-    CONSTRAINT FK_Participants_Users FOREIGN KEY (UserID) 
-        REFERENCES dbo.Users (UserID) ON DELETE CASCADE,
-    CONSTRAINT CK_Participants_Gender CHECK (Gender IN ('Male', 'Female', 'Other'))
+/* =========================================================
+   2. Organisers   — extension table for Role = Organiser
+   ========================================================= */
+CREATE TABLE [dbo].[Organisers] (
+    [OrganiserId]   INT IDENTITY(1,1) NOT NULL,
+    [UserId]        INT NOT NULL,
+    [CompanyName]   NVARCHAR(200) NOT NULL,
+    [CompanyRegNo]  NVARCHAR(30)  NULL,
+    [ContactEmail]  NVARCHAR(255) NOT NULL,
+    [IsVerified]    BIT NOT NULL
+        CONSTRAINT [DF_Organisers_IsVerified] DEFAULT (0),
+    CONSTRAINT [PK_Organisers] PRIMARY KEY CLUSTERED ([OrganiserId] ASC),
+    CONSTRAINT [UK_Organisers_UserId] UNIQUE NONCLUSTERED ([UserId] ASC),
+    CONSTRAINT [FK_Organisers_Users]
+        FOREIGN KEY ([UserId]) REFERENCES [dbo].[Users]([UserId])
+        ON DELETE CASCADE
 );
 GO
+PRINT 'Table [Organisers] created.';
 
--- ENTITY 4: Events (South African Road Running, Walking & Cycling Events)
-CREATE TABLE dbo.Events (
-    EventID INT IDENTITY(1,1) NOT NULL,
-    OrganiserID INT NOT NULL,
-    EventName NVARCHAR(200) NOT NULL,
-    EventType NVARCHAR(30) NOT NULL,
-    EventDate DATETIME2(7) NOT NULL,
-    Location NVARCHAR(200) NOT NULL,
-    Province NVARCHAR(50) NOT NULL,
-    Description NVARCHAR(MAX) NOT NULL,
-    Status NVARCHAR(20) NOT NULL CONSTRAINT DF_Events_Status DEFAULT 'Upcoming',
-    BannerUrl NVARCHAR(500) NULL,
-    ElevationGainMeters INT NOT NULL CONSTRAINT DF_Events_Elevation DEFAULT 0,
-    KeyLandmarks NVARCHAR(300) NULL,
-    TerrainType NVARCHAR(100) NOT NULL CONSTRAINT DF_Events_Terrain DEFAULT 'Road / Tarmac',
-    CreatedAt DATETIME2(7) NOT NULL CONSTRAINT DF_Events_CreatedAt DEFAULT SYSUTCDATETIME(),
-
-    CONSTRAINT PK_Events PRIMARY KEY CLUSTERED (EventID ASC),
-    CONSTRAINT FK_Events_Organisers FOREIGN KEY (OrganiserID) 
-        REFERENCES dbo.Organisers (OrganiserID) ON DELETE NO ACTION,
-    CONSTRAINT CK_Events_Type CHECK (EventType IN ('Running', 'Cycling', 'Walking', 'Multi-Sport')),
-    CONSTRAINT CK_Events_Status CHECK (Status IN ('Upcoming', 'Live', 'Completed', 'Cancelled')),
-    CONSTRAINT CK_Events_Province CHECK (Province IN (
-        'Eastern Cape', 'Free State', 'Gauteng', 'KwaZulu-Natal',
-        'Limpopo', 'Mpumalanga', 'Northern Cape', 'North West', 'Western Cape'
-    ))
+/* =========================================================
+   3. Participants  — extension table for Role = Participant
+   ========================================================= */
+CREATE TABLE [dbo].[Participants] (
+    [ParticipantId]   INT IDENTITY(1,1) NOT NULL,
+    [UserId]          INT NOT NULL,
+    [DateOfBirth]     DATE NOT NULL,
+    [Gender]          NVARCHAR(10) NULL,
+    [EmergencyContactName] NVARCHAR(150) NULL,
+    [EmergencyContactNo]   NVARCHAR(20)  NULL,
+    [TshirtSize]      NVARCHAR(5)   NULL,
+    CONSTRAINT [PK_Participants] PRIMARY KEY CLUSTERED ([ParticipantId] ASC),
+    CONSTRAINT [UK_Participants_UserId] UNIQUE NONCLUSTERED ([UserId] ASC),
+    CONSTRAINT [FK_Participants_Users]
+        FOREIGN KEY ([UserId]) REFERENCES [dbo].[Users]([UserId])
+        ON DELETE CASCADE
 );
 GO
+PRINT 'Table [Participants] created.';
 
--- ENTITY 5: Categories (Distances, Wave Starts, Fees, and Capacities)
-CREATE TABLE dbo.Categories (
-    CategoryID INT IDENTITY(1,1) NOT NULL,
-    EventID INT NOT NULL,
-    CategoryName NVARCHAR(100) NOT NULL,
-    DistanceKm DECIMAL(6,2) NOT NULL,
-    EntryFeeZAR DECIMAL(10,2) NOT NULL,
-    MaxCapacity INT NOT NULL,
-    StartTime TIME(0) NOT NULL,
-    CutoffHours DECIMAL(4,2) NOT NULL,
-
-    CONSTRAINT PK_Categories PRIMARY KEY CLUSTERED (CategoryID ASC),
-    CONSTRAINT FK_Categories_Events FOREIGN KEY (EventID) 
-        REFERENCES dbo.Events (EventID) ON DELETE CASCADE,
-    CONSTRAINT CK_Categories_Distance CHECK (DistanceKm > 0),
-    CONSTRAINT CK_Categories_Fee CHECK (EntryFeeZAR >= 0),
-    CONSTRAINT CK_Categories_Capacity CHECK (MaxCapacity > 0),
-    CONSTRAINT CK_Categories_Cutoff CHECK (CutoffHours > 0)
+/* =========================================================
+   4. Events
+   ========================================================= */
+CREATE TABLE [dbo].[Events] (
+    [EventId]          INT IDENTITY(1,1) NOT NULL,
+    [OrganiserId]      INT NOT NULL,
+    [Title]            NVARCHAR(200) NOT NULL,
+    [EventType]        NVARCHAR(30)  NOT NULL,
+    [Description]      NVARCHAR(2000) NULL,
+    [StartDate]        DATETIME2(0) NOT NULL,
+    [EndDate]          DATETIME2(0) NULL,
+    [City]             NVARCHAR(100) NOT NULL,
+    [Province]         NVARCHAR(50)  NOT NULL,
+    [RouteUrl]         NVARCHAR(500) NULL,
+    [EntryFeeZar]      DECIMAL(9,2)  NOT NULL
+        CONSTRAINT [DF_Events_EntryFeeZar] DEFAULT (0),
+    [MaxEntries]       INT NULL,
+    [RegistrationOpen] DATETIME2(0) NULL,
+    [RegistrationClose]DATETIME2(0) NULL,
+    [Status]           NVARCHAR(20) NOT NULL
+        CONSTRAINT [DF_Events_Status] DEFAULT ('Draft'),
+    [CreatedAt]        DATETIME2(3) NOT NULL
+        CONSTRAINT [DF_Events_CreatedAt] DEFAULT (SYSDATETIME()),
+    CONSTRAINT [PK_Events] PRIMARY KEY CLUSTERED ([EventId] ASC),
+    CONSTRAINT [CK_Events_Type] CHECK ([EventType] IN
+        ('Marathon','HalfMarathon','10km','5km','Cycle','Trail','Walk','ParkRun','Other')),
+    CONSTRAINT [CK_Events_Status] CHECK ([Status] IN
+        ('Draft','Open','Closed','Completed','Cancelled')),
+    CONSTRAINT [CK_Events_Dates] CHECK ([EndDate] IS NULL OR [EndDate] >= [StartDate]),
+    CONSTRAINT [FK_Events_Organisers]
+        FOREIGN KEY ([OrganiserId]) REFERENCES [dbo].[Organisers]([OrganiserId])
+        ON DELETE NO ACTION
 );
 GO
+PRINT 'Table [Events] created.';
 
--- ENTITY 6: Entries (Enrolments / Registrations - Associative Entity)
-CREATE TABLE dbo.Entries (
-    EntryID INT IDENTITY(1,1) NOT NULL,
-    ParticipantID INT NOT NULL,
-    CategoryID INT NOT NULL,
-    BibNumber NVARCHAR(20) NOT NULL,
-    RegistrationDate DATETIME2(7) NOT NULL CONSTRAINT DF_Entries_RegDate DEFAULT SYSUTCDATETIME(),
-    PaymentStatus NVARCHAR(20) NOT NULL CONSTRAINT DF_Entries_PaymentStatus DEFAULT 'Paid',
-    PaymentReference NVARCHAR(50) NOT NULL,
-    MedicalNotes NVARCHAR(500) NULL CONSTRAINT DF_Entries_Medical DEFAULT 'None',
-
-    CONSTRAINT PK_Entries PRIMARY KEY CLUSTERED (EntryID ASC),
-    CONSTRAINT UQ_Entries_PaymentReference UNIQUE (PaymentReference),
-    CONSTRAINT UQ_Entries_Participant_Category UNIQUE (ParticipantID, CategoryID),
-    CONSTRAINT UQ_Entries_Category_Bib UNIQUE (CategoryID, BibNumber),
-    CONSTRAINT FK_Entries_Participants FOREIGN KEY (ParticipantID) 
-        REFERENCES dbo.Participants (ParticipantID) ON DELETE NO ACTION,
-    CONSTRAINT FK_Entries_Categories FOREIGN KEY (CategoryID) 
-        REFERENCES dbo.Categories (CategoryID) ON DELETE CASCADE,
-    CONSTRAINT CK_Entries_PaymentStatus CHECK (PaymentStatus IN ('Paid', 'Pending', 'Cancelled', 'Refunded'))
+/* =========================================================
+   5. EventCategories  (e.g., Comrades Men Open, Ladies 42.2km, etc.)
+   ========================================================= */
+CREATE TABLE [dbo].[EventCategories] (
+    [CategoryId]     INT IDENTITY(1,1) NOT NULL,
+    [EventId]        INT NOT NULL,
+    [CategoryName]   NVARCHAR(100) NOT NULL,
+    [DistanceKm]     DECIMAL(6,2) NOT NULL,
+    [Gender]         NVARCHAR(10) NULL,
+    [MinAgeYears]    INT NULL,
+    [MaxAgeYears]    INT NULL,
+    [StartTime]      TIME(0) NULL,
+    [CutoffHours]    DECIMAL(4,2) NULL,
+    [EntryFeeZar]    DECIMAL(9,2) NOT NULL
+        CONSTRAINT [DF_Categories_EntryFeeZar] DEFAULT (0),
+    CONSTRAINT [PK_EventCategories] PRIMARY KEY CLUSTERED ([CategoryId] ASC),
+    CONSTRAINT [UK_Category_Per_Event] UNIQUE NONCLUSTERED ([EventId] ASC, [CategoryName] ASC),
+    CONSTRAINT [CK_Categories_Gender] CHECK ([Gender] IS NULL OR [Gender] IN ('Male','Female','Open','Mixed')),
+    CONSTRAINT [FK_Categories_Events]
+        FOREIGN KEY ([EventId]) REFERENCES [dbo].[Events]([EventId])
+        ON DELETE CASCADE
 );
 GO
+PRINT 'Table [EventCategories] created.';
 
--- ENTITY 7: Results (Official Timing, Overall/Category/Gender Ranks & Status)
-CREATE TABLE dbo.Results (
-    ResultID INT IDENTITY(1,1) NOT NULL,
-    EntryID INT NOT NULL,
-    GunTime TIME(3) NULL,
-    ChipTime TIME(3) NULL,
-    OverallRank INT NULL,
-    CategoryRank INT NULL,
-    GenderRank INT NULL,
-    Status NVARCHAR(20) NOT NULL CONSTRAINT DF_Results_Status DEFAULT 'Finished',
-    RecordedAt DATETIME2(7) NOT NULL CONSTRAINT DF_Results_RecordedAt DEFAULT SYSUTCDATETIME(),
-
-    CONSTRAINT PK_Results PRIMARY KEY CLUSTERED (ResultID ASC),
-    CONSTRAINT UQ_Results_EntryID UNIQUE (EntryID),
-    CONSTRAINT FK_Results_Entries FOREIGN KEY (EntryID) 
-        REFERENCES dbo.Entries (EntryID) ON DELETE CASCADE,
-    CONSTRAINT CK_Results_Status CHECK (Status IN ('Finished', 'DNF', 'DNS', 'Disqualified'))
+/* =========================================================
+   6. EventEnrolments  — participant enters an event + category
+   ========================================================= */
+CREATE TABLE [dbo].[EventEnrolments] (
+    [EnrolmentId]   INT IDENTITY(1,1) NOT NULL,
+    [ParticipantId] INT NOT NULL,
+    [EventId]       INT NOT NULL,
+    [CategoryId]    INT NOT NULL,
+    [EnrolmentDate] DATETIME2(3) NOT NULL
+        CONSTRAINT [DF_Enrolments_Date] DEFAULT (SYSDATETIME()),
+    [BibNumber]     NVARCHAR(15) NULL,
+    [PaymentStatus] NVARCHAR(20) NOT NULL
+        CONSTRAINT [DF_Enrolments_Payment] DEFAULT ('Pending'),
+    [Status]        NVARCHAR(20) NOT NULL
+        CONSTRAINT [DF_Enrolments_Status] DEFAULT ('Registered'),
+    [EmergencyNotes] NVARCHAR(500) NULL,
+    CONSTRAINT [PK_EventEnrolments] PRIMARY KEY CLUSTERED ([EnrolmentId] ASC),
+    CONSTRAINT [UK_Enrolment_UniquePerCat] UNIQUE NONCLUSTERED ([ParticipantId] ASC, [CategoryId] ASC),
+    CONSTRAINT [CK_Enrolments_Payment] CHECK ([PaymentStatus] IN
+        ('Pending','Paid','Refunded','Cancelled')),
+    CONSTRAINT [CK_Enrolments_Status] CHECK ([Status] IN
+        ('Registered','Waitlisted','Withdrawn','DidNotStart','Started')),
+    CONSTRAINT [FK_Enrolments_Participants]
+        FOREIGN KEY ([ParticipantId]) REFERENCES [dbo].[Participants]([ParticipantId])
+        ON DELETE NO ACTION,
+    CONSTRAINT [FK_Enrolments_Events]
+        FOREIGN KEY ([EventId]) REFERENCES [dbo].[Events]([EventId])
+        ON DELETE NO ACTION,
+    CONSTRAINT [FK_Enrolments_Categories]
+        FOREIGN KEY ([CategoryId]) REFERENCES [dbo].[EventCategories]([CategoryId])
+        ON DELETE NO ACTION
 );
 GO
+PRINT 'Table [EventEnrolments] created.';
 
--- ============================================================================
--- 4. PERFORMANCE INDEXES
--- ============================================================================
-CREATE NONCLUSTERED INDEX IX_Events_OrganiserID ON dbo.Events(OrganiserID);
-CREATE NONCLUSTERED INDEX IX_Events_Status_Date ON dbo.Events(Status, EventDate);
-CREATE NONCLUSTERED INDEX IX_Categories_EventID ON dbo.Categories(EventID);
-CREATE NONCLUSTERED INDEX IX_Entries_ParticipantID ON dbo.Entries(ParticipantID);
-CREATE NONCLUSTERED INDEX IX_Entries_CategoryID ON dbo.Entries(CategoryID);
-CREATE NONCLUSTERED INDEX IX_Results_EntryID ON dbo.Results(EntryID);
+/* =========================================================
+   7. Results  — captured by Organiser after event
+   ========================================================= */
+CREATE TABLE [dbo].[Results] (
+    [ResultId]      INT IDENTITY(1,1) NOT NULL,
+    [EnrolmentId]   INT NOT NULL,
+    [FinishTimeSec] INT NULL,
+    [ChipTimeSec]   INT NULL,
+    [GunPosition]   INT NULL,
+    [CategoryPosition] INT NULL,
+    [GenderPosition]   INT NULL,
+    [Status]        NVARCHAR(20) NOT NULL
+        CONSTRAINT [DF_Results_Status] DEFAULT ('Finished'),
+    [Splits]        NVARCHAR(1000) NULL,
+    [CapturedAt]    DATETIME2(3) NOT NULL
+        CONSTRAINT [DF_Results_CapturedAt] DEFAULT (SYSDATETIME()),
+    CONSTRAINT [PK_Results] PRIMARY KEY CLUSTERED ([ResultId] ASC),
+    CONSTRAINT [UK_Results_PerEnrolment] UNIQUE NONCLUSTERED ([EnrolmentId] ASC),
+    CONSTRAINT [CK_Results_Status] CHECK ([Status] IN
+        ('Finished','DNF','DNS','DQ')),
+    CONSTRAINT [FK_Results_Enrolments]
+        FOREIGN KEY ([EnrolmentId]) REFERENCES [dbo].[EventEnrolments]([EnrolmentId])
+        ON DELETE CASCADE
+);
 GO
+PRINT 'Table [Results] created.';
 
--- ============================================================================
--- 5. RELATIONAL VIEWS (Reporting & API Aggregations)
--- ============================================================================
-CREATE OR ALTER VIEW dbo.vw_EventDetails AS
-SELECT 
-    e.EventID,
-    e.EventName,
+/* =========================================================
+   8. WeatherSnapshots  — support "live weather" feature
+   ========================================================= */
+CREATE TABLE [dbo].[WeatherSnapshots] (
+    [SnapshotId]    INT IDENTITY(1,1) NOT NULL,
+    [EventId]       INT NOT NULL,
+    [SnapshotTime]  DATETIME2(3) NOT NULL,
+    [TemperatureC]  DECIMAL(4,1) NULL,
+    [HumidityPct]   INT NULL,
+    [WindKmh]       DECIMAL(5,1) NULL,
+    [Condition]     NVARCHAR(50) NULL,
+    [Source]        NVARCHAR(50) NULL,
+    CONSTRAINT [PK_WeatherSnapshots] PRIMARY KEY CLUSTERED ([SnapshotId] ASC),
+    CONSTRAINT [FK_Weather_Events]
+        FOREIGN KEY ([EventId]) REFERENCES [dbo].[Events]([EventId])
+        ON DELETE CASCADE
+);
+GO
+PRINT 'Table [WeatherSnapshots] created.';
+
+/* =========================================================
+   INDEXES for performance
+   ========================================================= */
+CREATE NONCLUSTERED INDEX [IX_Events_OrganiserId] ON [dbo].[Events]([OrganiserId]);
+CREATE NONCLUSTERED INDEX [IX_Events_StartDate]   ON [dbo].[Events]([StartDate]);
+CREATE NONCLUSTERED INDEX [IX_Categories_EventId]  ON [dbo].[EventCategories]([EventId]);
+CREATE NONCLUSTERED INDEX [IX_Enrolments_Participant] ON [dbo].[EventEnrolments]([ParticipantId]);
+CREATE NONCLUSTERED INDEX [IX_Enrolments_Event]     ON [dbo].[EventEnrolments]([EventId]);
+CREATE NONCLUSTERED INDEX [IX_Enrolments_Category]  ON [dbo].[EventEnrolments]([CategoryId]);
+CREATE NONCLUSTERED INDEX [IX_Results_Enrolment]    ON [dbo].[Results]([EnrolmentId]);
+CREATE NONCLUSTERED INDEX [IX_Weather_Event]        ON [dbo].[WeatherSnapshots]([EventId]);
+GO
+PRINT 'Non-clustered indexes created.';
+
+/* =========================================================
+   VIEWS  (convenient for Part 2 / Part 3 reporting)
+   ========================================================= */
+EXEC ('CREATE VIEW [dbo].[vEventSummary] AS
+SELECT
+    e.EventId,
+    e.Title,
     e.EventType,
-    e.EventDate,
-    e.Location,
-    e.Province,
+    e.City + '', '' + e.Province AS [Location],
+    e.StartDate,
     e.Status,
-    e.BannerUrl,
-    e.ElevationGainMeters,
-    e.KeyLandmarks,
-    e.TerrainType,
-    o.OrganiserID,
-    o.OrganizationName,
-    o.ContactEmail AS OrganiserEmail,
-    o.Phone AS OrganiserPhone,
-    COUNT(DISTINCT c.CategoryID) AS TotalCategories,
-    COUNT(DISTINCT ent.EntryID) AS TotalEnrolledParticipants
+    o.CompanyName AS Organiser,
+    COUNT(DISTINCT en.EnrolmentId) AS Entrants
 FROM dbo.Events e
-INNER JOIN dbo.Organisers o ON e.OrganiserID = o.OrganiserID
-LEFT JOIN dbo.Categories c ON e.EventID = c.EventID
-LEFT JOIN dbo.Entries ent ON c.CategoryID = ent.CategoryID
-GROUP BY 
-    e.EventID, e.EventName, e.EventType, e.EventDate, e.Location, e.Province, 
-    e.Status, e.BannerUrl, e.ElevationGainMeters, e.KeyLandmarks, e.TerrainType,
-    o.OrganiserID, o.OrganizationName, o.ContactEmail, o.Phone;
+JOIN dbo.Organisers o ON o.OrganiserId = e.OrganiserId
+LEFT JOIN dbo.EventEnrolments en ON en.EventId = e.EventId
+GROUP BY e.EventId, e.Title, e.EventType, e.City, e.Province, e.StartDate, e.Status, o.CompanyName;');
 GO
 
-CREATE OR ALTER VIEW dbo.vw_EnrolmentLeaderboard AS
-SELECT 
-    r.ResultID,
-    r.OverallRank,
-    r.CategoryRank,
-    r.GenderRank,
-    r.ChipTime,
-    r.GunTime,
-    r.Status AS RaceStatus,
-    ent.BibNumber,
-    ent.PaymentStatus,
-    p.ParticipantID,
-    p.FirstName + ' ' + p.LastName AS ParticipantName,
-    p.Gender,
-    p.ClubName,
-    c.CategoryID,
-    c.CategoryName,
-    c.DistanceKm,
-    e.EventID,
-    e.EventName,
-    e.EventDate,
-    e.Location
-FROM dbo.Results r
-INNER JOIN dbo.Entries ent ON r.EntryID = ent.EntryID
-INNER JOIN dbo.Participants p ON ent.ParticipantID = p.ParticipantID
-INNER JOIN dbo.Categories c ON ent.CategoryID = c.CategoryID
-INNER JOIN dbo.Events e ON c.EventID = e.EventID;
+EXEC ('CREATE VIEW [dbo].[vParticipantHistory] AS
+SELECT
+    p.ParticipantId,
+    u.FullName,
+    e.EventId,
+    e.Title AS EventName,
+    ec.CategoryName,
+    en.EnrolmentDate,
+    en.Status AS EnrolmentStatus,
+    r.Status   AS RaceStatus,
+    r.FinishTimeSec,
+    r.GunPosition
+FROM dbo.Participants p
+JOIN dbo.Users u ON u.UserId = p.UserId
+JOIN dbo.EventEnrolments en ON en.ParticipantId = p.ParticipantId
+JOIN dbo.Events e        ON e.EventId   = en.EventId
+JOIN dbo.EventCategories ec ON ec.CategoryId = en.CategoryId
+LEFT JOIN dbo.Results r  ON r.EnrolmentId = en.EnrolmentId;');
+GO
+PRINT 'Views created.';
+
+/* =========================================================
+   SEED DATA
+   ========================================================= */
+PRINT '=========================================';
+PRINT '  Inserting seed data...';
+PRINT '=========================================';
+
+SET IDENTITY_INSERT [dbo].[Users] ON;
+INSERT [dbo].[Users] ([UserId],[Email],[PasswordHash],[Role],[FullName],[PhoneNumber],[Province],[CreatedAt]) VALUES
+ (1, N'tebogo.moagi@soulcityevents.co.za', N'hashed|AEn8Pq...Part1Demo', N'Organiser',   N'Tebogo Moagi',       N'082 345 6710', N'Gauteng',    '2026-06-01 09:00:00')
+,(2, N'anika.vanheerden@ctcyclingtours.co.za', N'hashed|ALr7Xm...Part1Demo', N'Organiser',   N'Anika van Heerden',  N'074 211 3300', N'Western Cape', '2026-06-01 09:05:00')
+,(3, N'sbusiso.ndlovu@mweb.co.za',      N'hashed|Am9Kp...Part1Demo',  N'Participant', N'Sibusiso Ndlovu',    N'079 123 4567', N'KwaZulu-Natal', '2026-06-03 10:12:00')
+,(4, N'leigh-anne.botes@gmail.com',     N'hashed|AZx41...Part1Demo',  N'Participant', N'Leigh-Anne Botes',   N'083 991 0227', N'Eastern Cape', '2026-06-04 14:40:00')
+;
+SET IDENTITY_INSERT [dbo].[Users] OFF;
 GO
 
-PRINT 'Schema definitions, indexes, and views created successfully.';
+SET IDENTITY_INSERT [dbo].[Organisers] ON;
+INSERT [dbo].[Organisers] ([OrganiserId],[UserId],[CompanyName],[CompanyRegNo],[ContactEmail],[IsVerified]) VALUES
+ (1, 1, N'Soul City Events (Pty) Ltd',     N'2018/012345/07', N'reg@soulcityevents.co.za',      1)
+,(2, 2, N'Cape Town Cycling Tours CC',     N'2021/998877/23', N'entries@ctcyclingtours.co.za',  1)
+;
+SET IDENTITY_INSERT [dbo].[Organisers] OFF;
 GO
 
--- ============================================================================
--- 6. REALISTIC SOUTH AFRICAN SEED DATA
--- ============================================================================
-
--- A. SEED USERS (2 Organisers + 4 Participants)
--- Passwords hashed representation for demonstration/development
-INSERT INTO dbo.Users (Email, PasswordHash, Role, IsActive) VALUES
--- Organisers
-('info@comrades.com', 'AQAAAAEAACcQAAAAEJ8u8vXmK1a...HashedPasswordOrg1', 'Organiser', 1),
-('entries@capetowncycletour.com', 'AQAAAAEAACcQAAAAEK9v9wYnL2b...HashedPasswordOrg2', 'Organiser', 1),
-('admin@sowetomarathon.com', 'AQAAAAEAACcQAAAAEM1x0zZoM3c...HashedPasswordOrg3', 'Organiser', 1),
--- Participants
-('sibusiso.vilakazi@gmail.com', 'AQAAAAEAACcQAAAAEN2y1aApN4d...HashedPasswordPart1', 'Participant', 1),
-('pieter.vandermerwe@outlook.com', 'AQAAAAEAACcQAAAAEO3z2bBqO5e...HashedPasswordPart2', 'Participant', 1),
-('lerato.molefe@yahoo.com', 'AQAAAAEAACcQAAAAEP4a3cCrP6f...HashedPasswordPart3', 'Participant', 1),
-('chloe.adams@mweb.co.za', 'AQAAAAEAACcQAAAAEQ5b4dDsQ7g...HashedPasswordPart4', 'Participant', 1);
+SET IDENTITY_INSERT [dbo].[Participants] ON;
+INSERT [dbo].[Participants] ([ParticipantId],[UserId],[DateOfBirth],[Gender],[EmergencyContactName],[EmergencyContactNo],[TshirtSize]) VALUES
+ (1, 3, '1992-05-14', N'Male',   N'Thando Ndlovu', N'071 303 0908', N'L')
+,(2, 4, '1997-11-02', N'Female', N'Michael Botes', N'082 711 4560', N'M')
+;
+SET IDENTITY_INSERT [dbo].[Participants] OFF;
 GO
 
--- B. SEED ORGANISERS
-INSERT INTO dbo.Organisers (UserID, OrganizationName, ContactEmail, Phone, Province, IsVerified) VALUES
-(1, 'Comrades Marathon Association', 'info@comrades.com', '+27 33 897 8650', 'KwaZulu-Natal', 1),
-(2, 'Cape Town Cycle Tour Trust', 'entries@capetowncycletour.com', '+27 21 681 4300', 'Western Cape', 1),
-(3, 'Soweto Marathon Trust', 'admin@sowetomarathon.com', '+27 11 837 8443', 'Gauteng', 1);
+SET IDENTITY_INSERT [dbo].[Events] ON;
+INSERT [dbo].[Events] ([EventId],[OrganiserId],[Title],[EventType],[Description],[StartDate],[EndDate],[City],[Province],[RouteUrl],[EntryFeeZar],[MaxEntries],[RegistrationOpen],[RegistrationClose],[Status],[CreatedAt]) VALUES
+ (1, 1, N'94th Comrades Marathon 2026',   N'Marathon',
+    N'The Ultimate Human Race — Down Run from Pietermaritzburg to Durban (89 km).',
+    '2026-06-14 05:30:00','2026-06-14 18:00:00',
+    N'Durban',  N'KwaZulu-Natal',
+    N'https://routelink.comrades.co.za/2026-down-run', 600.00, 25000,
+    '2026-01-15 00:00:00','2026-05-10 23:59:00',
+    N'Completed', '2026-06-02 11:00:00')
+,(2, 2, N'Cape Town Cycle Tour 2026',      N'Cycle',
+    N'109 km around the Cape Peninsula — the largest individually timed cycling event in the world.',
+    '2026-03-08 06:15:00','2026-03-08 16:00:00',
+    N'Cape Town', N'Western Cape',
+    N'https://routelink.cycletour.co.za/2026', 520.00, 35000,
+    '2025-11-01 00:00:00','2026-02-20 23:59:00',
+    N'Completed', '2026-06-02 11:05:00')
+,(3, 1, N'Soweto Marathon 2026',           N'Marathon',
+    N'42.2 km through Soweto — the People''s Race, including 10 km fun run.',
+    '2026-11-01 06:00:00','2026-11-01 17:00:00',
+    N'Soweto', N'Gauteng',
+    N'https://routelink.sowetomarathon.co.za/2026', 450.00, 20000,
+    '2026-07-01 00:00:00','2026-10-15 23:59:00',
+    N'Open',      '2026-06-02 11:10:00')
+;
+SET IDENTITY_INSERT [dbo].[Events] OFF;
 GO
 
--- C. SEED PARTICIPANTS
-INSERT INTO dbo.Participants (UserID, FirstName, LastName, SAIDOrPassport, Gender, DateOfBirth, ClubName, EmergencyPhone, Email) VALUES
-(4, 'Sibusiso', 'Vilakazi', '9205145829081', 'Male', '1992-05-14', 'Hollywoodbets Athletics Club', '+27 82 456 7890', 'sibusiso.vilakazi@gmail.com'),
-(5, 'Pieter', 'van der Merwe', '8811235129088', 'Male', '1988-11-23', 'Tygerberg Cycling Club', '+27 83 987 6543', 'pieter.vandermerwe@outlook.com'),
-(6, 'Lerato', 'Molefe', '9502180429084', 'Female', '1995-02-18', 'Orlando AC Soweto', '+27 71 234 5678', 'lerato.molefe@yahoo.com'),
-(7, 'Chloe', 'Adams', '9907090229080', 'Female', '1999-07-09', 'Atlantic Triathlon Club', '+27 84 345 6789', 'chloe.adams@mweb.co.za');
+SET IDENTITY_INSERT [dbo].[EventCategories] ON;
+INSERT [dbo].[EventCategories] ([CategoryId],[EventId],[CategoryName],[DistanceKm],[Gender],[MinAgeYears],[MaxAgeYears],[StartTime],[CutoffHours],[EntryFeeZar]) VALUES
+-- Comrades
+ (1, 1, N'Comrades Open Men',        89.00, N'Male',   20, NULL, '05:30:00', 12.00, 600.00)
+,(2, 1, N'Comrades Open Women',      89.00, N'Female', 20, NULL, '05:30:00', 12.00, 600.00)
+,(3, 1, N'Comrades Veterans Men',   89.00, N'Male',   40, NULL, '05:30:00', 12.00, 600.00)
+-- CT Cycle Tour
+,(4, 2, N'CTCT Open',               109.00, N'Open',   16, NULL, '06:15:00',  7.00, 520.00)
+,(5, 2, N'CTCT Ladies',             109.00, N'Female', 16, NULL, '06:15:00',  7.00, 520.00)
+-- Soweto
+,(6, 3, N'Soweto Marathon Men',     42.20, N'Male',   18, NULL, '06:00:00',  6.00, 450.00)
+,(7, 3, N'Soweto Marathon Women',   42.20, N'Female', 18, NULL, '06:00:00',  6.00, 450.00)
+,(8, 3, N'Soweto 10km Fun Run',     10.00, N'Open',   12, NULL, '07:00:00',  2.50, 120.00)
+;
+SET IDENTITY_INSERT [dbo].[EventCategories] OFF;
 GO
 
--- D. SEED EVENTS (Iconic South African Road Events)
-INSERT INTO dbo.Events (OrganiserID, EventName, EventType, EventDate, Location, Province, Description, Status, BannerUrl, ElevationGainMeters, KeyLandmarks, TerrainType) VALUES
-(1, 'Comrades Marathon 2026', 'Running', '2026-06-14 05:30:00', 'Pietermaritzburg to Durban (Down Run)', 'KwaZulu-Natal', 
- 'The Ultimate Human Race - The world''s oldest and largest ultramarathon run over 89km between Pietermaritzburg City Hall and Durban Kingsmead Stadium.', 
- 'Upcoming', 'https://images.unsplash.com/photo-1530549387789-4c1017266635?auto=format&fit=crop&w=1200&q=80', 1250, 'Polly Shorts, Inchanga, Botha''s Hill, Fields Hill, Cowie''s Hill', 'Road / Tarmac'),
-
-(2, 'Cape Town Cycle Tour 2026', 'Cycling', '2026-03-08 06:00:00', 'Cape Town Grand Parade, Cape Town', 'Western Cape', 
- 'The iconic 109km bicycle race around the picturesque Cape Peninsula, hosting over 35,000 local and international cyclists through scenic coastal roads.', 
- 'Upcoming', 'https://images.unsplash.com/photo-1517649763962-0c623266ddc0?auto=format&fit=crop&w=1200&q=80', 1180, 'Smitswinkel, Chapman''s Peak Drive, Suikerbossie', 'Road / Coastal Tarmac'),
-
-(3, 'Soweto Marathon 2026', 'Running', '2026-11-01 06:00:00', 'FNB Stadium, Nasrec, Soweto', 'Gauteng', 
- 'The People''s Race - Experience the vibrant heart of South Africa, running through the historical streets of Soweto past Vilakazi Street and Hector Pieterson Memorial.', 
- 'Upcoming', 'https://images.unsplash.com/photo-1452626038306-9aae5e071dd3?auto=format&fit=crop&w=1200&q=80', 490, 'Vilakazi Street, Walter Sisulu Square, Chris Hani Baragwanath Hospital', 'City Road / Tarmac');
+SET IDENTITY_INSERT [dbo].[EventEnrolments] ON;
+INSERT [dbo].[EventEnrolments] ([EnrolmentId],[ParticipantId],[EventId],[CategoryId],[EnrolmentDate],[BibNumber],[PaymentStatus],[Status],[EmergencyNotes]) VALUES
+-- Comrades — seed enrolments (2026 completed)
+ (1, 1, 1, 1, '2026-02-04 07:45:00', N'12742', N'Paid',      N'Withdrawn',     N'Asthmatic')
+,(2, 2, 1, 2, '2026-02-05 10:02:00', N'08123', N'Paid',      N'Started',       NULL)
+-- CT Cycle Tour — seed enrolments
+,(3, 1, 2, 4, '2025-12-10 09:20:00', N'C2211', N'Paid',      N'DidNotStart',   NULL)
+,(4, 2, 2, 5, '2026-01-11 18:31:00', N'C0458', N'Paid',      N'Registered',    NULL)
+-- Soweto — seed enrolments (Open for entry)
+,(5, 1, 3, 6, '2026-07-12 11:00:00', NULL,     N'Pending',   N'Registered',    N'Vegetarian meal')
+,(6, 2, 3, 8, '2026-07-15 09:00:00', NULL,     N'Paid',      N'Registered',    NULL)
+;
+SET IDENTITY_INSERT [dbo].[EventEnrolments] OFF;
 GO
 
--- E. SEED CATEGORIES
-INSERT INTO dbo.Categories (EventID, CategoryName, DistanceKm, EntryFeeZAR, MaxCapacity, StartTime, CutoffHours) VALUES
--- Comrades Marathon Categories
-(1, '89km Ultra Marathon (Down Run)', 89.00, 1250.00, 25000, '05:30:00', 12.00),
-(1, '45km Half-Comrades Challenge', 45.00, 650.00, 5000, '07:00:00', 6.50),
-
--- Cape Town Cycle Tour Categories
-(2, '109km Classic Road Race', 109.00, 850.00, 30000, '06:00:00', 7.00),
-(2, '42km Short Peninsula Route', 42.00, 480.00, 8000, '08:30:00', 4.00),
-
--- Soweto Marathon Categories
-(3, '42.2km Standard Marathon', 42.20, 450.00, 10000, '06:00:00', 6.00),
-(3, '21.1km Half Marathon', 21.10, 300.00, 12000, '06:30:00', 3.50),
-(3, '10km Community Run & Walk', 10.00, 180.00, 8000, '07:15:00', 2.00);
+SET IDENTITY_INSERT [dbo].[Results] ON;
+INSERT [dbo].[Results] ([ResultId],[EnrolmentId],[FinishTimeSec],[ChipTimeSec],[GunPosition],[CategoryPosition],[GenderPosition],[Status],[Splits],[CapturedAt]) VALUES
+ (1, 1, NULL,      NULL,      NULL,  NULL, NULL, N'DNF',     N'42km reached in 04:50:00 — stopped at Drummond', '2026-06-14 14:10:00')
+,(2, 2, 40680,     40608,     876,   112,  876,  N'Finished',N'21km:03:05:20; 42km:06:21:10; 60km:08:45:50; End:11:18:00', '2026-06-14 18:02:00')
+;
+SET IDENTITY_INSERT [dbo].[Results] OFF;
 GO
 
--- F. SEED ENTRIES (Registrations)
-INSERT INTO dbo.Entries (ParticipantID, CategoryID, BibNumber, RegistrationDate, PaymentStatus, PaymentReference, MedicalNotes) VALUES
--- Sibusiso enters Comrades 89km
-(1, 1, 'C-10482', '2026-01-15 08:30:00', 'Paid', 'PAY-COM26-89K-001', 'None - Completed qualifying marathon in 03:15:00'),
--- Pieter enters Cape Town Cycle Tour 109km
-(2, 3, 'CT-34901', '2026-01-18 10:15:00', 'Paid', 'PAY-CTCT26-109-002', 'Asthma inhaler carried in jersey pocket'),
--- Lerato enters Soweto Marathon 42.2km
-(3, 5, 'SW-08421', '2026-02-01 14:20:00', 'Paid', 'PAY-SOW26-42K-003', 'Mild penicillin allergy'),
--- Chloe enters Cape Town Cycle Tour 109km
-(4, 3, 'CT-34902', '2026-02-10 11:45:00', 'Paid', 'PAY-CTCT26-109-004', 'None');
+SET IDENTITY_INSERT [dbo].[WeatherSnapshots] ON;
+INSERT [dbo].[WeatherSnapshots] ([SnapshotId],[EventId],[SnapshotTime],[TemperatureC],[HumidityPct],[WindKmh],[Condition],[Source]) VALUES
+ (1, 1, '2026-06-14 05:00:00',  11.2, 88,  9.0,  N'Light mist',   N'SAWS Pietermaritzburg')
+,(2, 1, '2026-06-14 10:00:00',  18.0, 65, 14.0,  N'Sunny',        N'SAWS Hillcrest')
+,(3, 1, '2026-06-14 14:00:00',  22.5, 52, 21.0,  N'Hot & sunny',  N'SAWS Durban South')
+,(4, 3, '2026-11-01 06:00:00',  17.0, NULL, 12.0, N'Clear',        N'[Live forecast — race day]')
+;
+SET IDENTITY_INSERT [dbo].[WeatherSnapshots] OFF;
 GO
 
--- G. SEED RESULTS (Timing & Leaderboard)
-INSERT INTO dbo.Results (EntryID, GunTime, ChipTime, OverallRank, CategoryRank, GenderRank, Status) VALUES
-(1, '06:14:22.450', '06:13:58.120', 48, 12, 42, 'Finished'),
-(2, '02:58:14.300', '02:56:45.890', 115, 34, 108, 'Finished'),
-(3, '03:42:10.150', '03:41:28.020', 82, 19, 15, 'Finished'),
-(4, '03:15:40.000', '03:14:12.750', 230, 45, 38, 'Finished');
+/* =========================================================
+   REPORT — counts and sample data
+   ========================================================= */
+PRINT '';
+PRINT '----- Seed data summary ------';
+SELECT 'Users'         AS Tbl, COUNT(*) AS Rows FROM [dbo].[Users]         UNION ALL
+SELECT 'Organisers'    AS Tbl, COUNT(*) AS Rows FROM [dbo].[Organisers]    UNION ALL
+SELECT 'Participants'  AS Tbl, COUNT(*) AS Rows FROM [dbo].[Participants]  UNION ALL
+SELECT 'Events'        AS Tbl, COUNT(*) AS Rows FROM [dbo].[Events]        UNION ALL
+SELECT 'Categories'    AS Tbl, COUNT(*) AS Rows FROM [dbo].[EventCategories] UNION ALL
+SELECT 'Enrolments'    AS Tbl, COUNT(*) AS Rows FROM [dbo].[EventEnrolments] UNION ALL
+SELECT 'Results'       AS Tbl, COUNT(*) AS Rows FROM [dbo].[Results]       UNION ALL
+SELECT 'Weather'       AS Tbl, COUNT(*) AS Rows FROM [dbo].[WeatherSnapshots];
 GO
 
--- ============================================================================
--- 7. VERIFICATION SCRIPT / QUERY CHECK
--- ============================================================================
+PRINT '';
 PRINT '==================================================';
-PRINT 'RaceDay Database Schema & Seed Data Verification';
+PRINT '  RaceDay Part 1 script completed successfully.';
 PRINT '==================================================';
-SELECT 'Users' AS EntityName, COUNT(*) AS TotalRecords FROM dbo.Users
-UNION ALL
-SELECT 'Organisers', COUNT(*) FROM dbo.Organisers
-UNION ALL
-SELECT 'Participants', COUNT(*) FROM dbo.Participants
-UNION ALL
-SELECT 'Events', COUNT(*) FROM dbo.Events
-UNION ALL
-SELECT 'Categories', COUNT(*) FROM dbo.Categories
-UNION ALL
-SELECT 'Entries', COUNT(*) FROM dbo.Entries
-UNION ALL
-SELECT 'Results', COUNT(*) FROM dbo.Results;
-GO
-
-PRINT 'RaceDay database setup completed with zero errors.';
 GO

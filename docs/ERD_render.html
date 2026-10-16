@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8">
+<title>RaceDay ERD — Part 1</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.1/dist/mermaid.min.js"></script>
+<style>
+  html,body{margin:0;padding:0;background:#fff;font-family:Segoe UI,Arial,sans-serif;color:#222}
+  header{padding:20px 36px 6px;background:#0b2f64;color:#fff}
+  header h1{margin:0;font-size:24px}
+  header p{margin:4px 0 0;opacity:.9;font-size:14px}
+  .wrap{padding:24px 36px}
+  .key{display:flex;gap:24px;flex-wrap:wrap;margin:0 0 22px}
+  .key div{border-left:4px solid #0b2f64;padding:6px 12px;background:#eef3ff;min-width:260px;border-radius:4px}
+  .key h4{margin:0 0 2px;color:#0b2f64;font-size:14px}
+  .key span{font-size:12px;color:#333}
+  .legend{font-size:12px;color:#444;margin-bottom:8px}
+  pre.source{background:#f6f6f6;padding:10px 14px;border-radius:6px;overflow:auto;font-size:11px;max-height:260px}
+  .mermaid{text-align:center}
+</style></head>
+<body>
+<header>
+  <h1>RaceDay — Entity Relationship Diagram (Part 1)</h1>
+  <p>8 entities · 9 relationships · 1:1 extensions for Organiser / Participant · 1:1 Result per Enrolment</p>
+</header>
+<div class="wrap">
+  <div class="key">
+    <div><h4>1. USERS → ORGANISERS / PARTICIPANTS</h4><span>1:1 extension tables — Users.Role determines which table the row joins to.</span></div>
+    <div><h4>2. ORGANISERS → EVENTS</h4><span>1:N ownership — each event belongs to exactly one Organiser.</span></div>
+    <div><h4>3. EVENTS → CATEGORIES</h4><span>1:N (e.g. Comrades has Men Open, Women Open, Veterans Men, etc.)</span></div>
+    <div><h4>4. PARTICIPANTS + CATEGORY → EVENT ENROLMENTS</h4><span>N:M join table with UK(ParticipantId, CategoryId); unique per participant+category.</span></div>
+    <div><h4>5. ENROLMENTS → RESULTS</h4><span>1:0..1 — an enrolment produces at most one result (Finished / DNF / DNS / DQ).</span></div>
+    <div><h4>6. EVENTS → WEATHER_SNAPSHOTS</h4><span>1:N — supports "live weather" preparation feature for race day.</span></div>
+  </div>
+
+  <p class="legend"><strong>Cardinality cheat sheet:</strong> <code>||</code> = exactly 1, &nbsp; <code>o|</code> = 0..1, &nbsp; <code>}o</code> = 0..N, &nbsp; <code>||--o{</code> = one-to-many (parent required, child optional/many).</p>
+
+  <div class="mermaid">
+erDiagram
+    USERS {
+        int UserId PK
+        nvarchar255 Email UK
+        nvarchar255 PasswordHash
+        nvarchar20 Role
+        nvarchar150 FullName
+        nvarchar20 PhoneNumber
+        nvarchar50 Province
+        datetime2_3 CreatedAt
+    }
+    ORGANISERS {
+        int OrganiserId PK
+        int UserId FK
+        nvarchar200 CompanyName
+        nvarchar30 CompanyRegNo
+        nvarchar255 ContactEmail
+        bit IsVerified
+    }
+    PARTICIPANTS {
+        int ParticipantId PK
+        int UserId FK
+        date DateOfBirth
+        nvarchar10 Gender
+        nvarchar150 EmergencyContactName
+        nvarchar20 EmergencyContactNo
+        nvarchar5 TshirtSize
+    }
+    EVENTS {
+        int EventId PK
+        int OrganiserId FK
+        nvarchar200 Title
+        nvarchar30 EventType
+        nvarchar2000 Description
+        datetime2_0 StartDate
+        datetime2_0 EndDate
+        nvarchar100 City
+        nvarchar50 Province
+        nvarchar500 RouteUrl
+        decimal9_2 EntryFeeZar
+        int MaxEntries
+        datetime2_0 RegistrationOpen
+        datetime2_0 RegistrationClose
+        nvarchar20 Status
+        datetime2_3 CreatedAt
+    }
+    EVENT_CATEGORIES {
+        int CategoryId PK
+        int EventId FK
+        nvarchar100 CategoryName
+        decimal6_2 DistanceKm
+        nvarchar10 Gender
+        int MinAgeYears
+        int MaxAgeYears
+        time0 StartTime
+        decimal4_2 CutoffHours
+        decimal9_2 EntryFeeZar
+    }
+    EVENT_ENROLMENTS {
+        int EnrolmentId PK
+        int ParticipantId FK
+        int EventId FK
+        int CategoryId FK
+        datetime2_3 EnrolmentDate
+        nvarchar15 BibNumber
+        nvarchar20 PaymentStatus
+        nvarchar20 Status
+        nvarchar500 EmergencyNotes
+    }
+    RESULTS {
+        int ResultId PK
+        int EnrolmentId FK
+        int FinishTimeSec
+        int ChipTimeSec
+        int GunPosition
+        int CategoryPosition
+        int GenderPosition
+        nvarchar20 Status
+        nvarchar1000 Splits
+        datetime2_3 CapturedAt
+    }
+    WEATHER_SNAPSHOTS {
+        int SnapshotId PK
+        int EventId FK
+        datetime2_3 SnapshotTime
+        decimal4_1 TemperatureC
+        int HumidityPct
+        decimal5_1 WindKmh
+        nvarchar50 Condition
+        nvarchar50 Source
+    }
+
+    USERS ||--o| ORGANISERS : "1:1 extension"
+    USERS ||--o| PARTICIPANTS : "1:1 extension"
+    ORGANISERS ||--o{ EVENTS : "owns 1:N"
+    EVENTS ||--o{ EVENT_CATEGORIES : "1:N categories"
+    EVENTS ||--o{ WEATHER_SNAPSHOTS : "1:N snapshots"
+    PARTICIPANTS ||--o{ EVENT_ENROLMENTS : "1:N enrolments"
+    EVENTS ||--o{ EVENT_ENROLMENTS : "1:N enrolments"
+    EVENT_CATEGORIES ||--o{ EVENT_ENROLMENTS : "1:N enrolments"
+    EVENT_ENROLMENTS ||--o| RESULTS : "1:0..1 result"
+  </div>
+
+  <p style="margin-top:26px;font-size:12px;color:#555">Rendered by Mermaid 10.9.1 — source at <code>/docs/ERD_MERMAID.md</code>. The SQL schema in <code>RaceDay_DB_Script.sql</code> matches this diagram exactly.</p>
+</div>
+<script>mermaid.initialize({startOnLoad:true,theme:'default',er:{diagramPadding:16,entityPadding:8,minEntityWidth:220,fontSize:12}});</script>
+</body></html>
