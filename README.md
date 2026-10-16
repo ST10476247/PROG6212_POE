@@ -14,12 +14,6 @@
 
 ---
 
-## 🧭 POE Progressive Roadmap
-
-- [x] **Part 1 — System Planning, ERD & Database Design** (Completed & Submitted)
-- [x] **Part 2 — RESTful API Development & Unit Testing** (⏱️ **YOU ARE HERE — 100/100 Marks Target**)
-- [ ] **Part 3 — MVC Web Application, Azure Storage & Containerisation** (Coming Next)
-
 ---
 
 ## 📦 Part 2 — Deliverables & Solution Architecture
