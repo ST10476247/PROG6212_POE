@@ -1,0 +1,163 @@
+@model EnrolViewModel
+@{
+    ViewData["Title"] = "Enter Event: " + Model.EventTitle;
+}
+
+<div class="bg-dark text-white py-4 border-bottom border-secondary mb-4">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <span class="role-badge-participant mb-2 d-inline-block">Race Entry Checkout</span>
+                <h1 class="h3 fw-bold mb-1">Enter Event: @Model.EventTitle</h1>
+                <p class="text-white-50 small mb-0">Select your race category to record your enrolment and receive your official race bib</p>
+            </div>
+            <a asp-controller="Events" asp-action="Details" asp-route-id="@Model.EventId" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Back to Details
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-9">
+            <div class="card shadow-lg border-0 rounded-4 overflow-hidden bg-white">
+                <!-- Event Banner Snippet -->
+                <div class="p-4 text-white" style="background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);">
+                    <div class="row align-items-center g-3">
+                        <div class="col-md-8">
+                            <h4 class="fw-bold text-white mb-1">@Model.EventTitle</h4>
+                            <div class="small text-white-50">
+                                <i class="bi bi-calendar-event me-1"></i>@Model.StartDate.ToString("dddd, dd MMMM yyyy") &bull;
+                                <i class="bi bi-geo-alt me-1 text-danger"></i>@Model.City, @Model.Province
+                            </div>
+                        </div>
+                        <div class="col-md-4 text-md-end">
+                            <span class="badge bg-warning text-dark px-3 py-2 rounded-pill fw-bold">
+                                Instant Bib Allocation
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-4 p-md-5">
+                    <form asp-action="Enrol" method="post" novalidate>
+                        <input type="hidden" asp-for="EventId" />
+                        <input type="hidden" asp-for="EventTitle" />
+                        <input type="hidden" asp-for="City" />
+                        <input type="hidden" asp-for="Province" />
+                        <input type="hidden" asp-for="StartDate" />
+                        <input type="hidden" asp-for="BannerUrl" />
+
+                        <div asp-validation-summary="ModelOnly" class="alert alert-danger small py-2 mb-4"></div>
+
+                        <!-- 1. Category Selection (Requirement 4: Select a category) -->
+                        <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">
+                            <i class="bi bi-tags-fill text-primary me-2"></i>1. Select Your Race Category & Distance *
+                        </h5>
+
+                        <div class="mb-4">
+                            @if (!Model.AvailableCategories.Any())
+                            {
+                                <div class="alert alert-warning small">
+                                    No categories have been defined for this event yet. Please contact the race organiser.
+                                </div>
+                            }
+                            else
+                            {
+                                <div class="row g-3">
+                                    @foreach (var cat in Model.AvailableCategories)
+                                    {
+                                        <div class="col-md-6">
+                                            <div class="form-check card p-3 h-100 border rounded-3 position-relative">
+                                                <input class="form-check-input ms-0 me-3" type="radio" asp-for="CategoryId" value="@cat.CategoryId" id="cat_@cat.CategoryId" required />
+                                                <label class="form-check-label w-100 ps-4 cursor-pointer" for="cat_@cat.CategoryId">
+                                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                                        <strong class="text-dark fs-6">@cat.CategoryName</strong>
+                                                        <span class="badge bg-primary">@cat.DistanceKm km</span>
+                                                    </div>
+                                                    <div class="small text-muted mb-2">
+                                                        <i class="bi bi-clock me-1"></i>Start: @cat.FormattedStartTime &bull; Age: @cat.AgeBracket
+                                                    </div>
+                                                    <div class="fw-bold text-success">
+                                                        R @(cat.EntryFeeZar?.ToString("N0") ?? "Included")
+                                                    </div>
+                                                </label>
+                                            </div>
+                                        </div>
+                                    }
+                                </div>
+                                <span asp-validation-for="CategoryId" class="text-danger small mt-2 d-block"></span>
+                            }
+                        </div>
+
+                        <!-- 2. Athlete Information & Logistics -->
+                        <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">
+                            <i class="bi bi-person-badge text-warning me-2"></i>2. Athlete Details & Logistics
+                        </h5>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label asp-for="ClubName" class="form-label small fw-bold text-muted text-uppercase">Running / Cycling Club (Optional)</label>
+                                <input asp-for="ClubName" class="form-control" placeholder="e.g. Nedbank Running Club" />
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="TshirtSize" class="form-label small fw-bold text-muted text-uppercase">Commemorative T-Shirt Size *</label>
+                                <select asp-for="TshirtSize" class="form-select" required>
+                                    <option value="XS">XS</option>
+                                    <option value="S">S</option>
+                                    <option value="M" selected>M (Medium)</option>
+                                    <option value="L">L (Large)</option>
+                                    <option value="XL">XL</option>
+                                    <option value="XXL">XXL</option>
+                                </select>
+                            </div>
+
+                            <div class="col-md-6">
+                                <label asp-for="EmergencyContactName" class="form-label small fw-bold text-muted text-uppercase">Emergency Contact Name *</label>
+                                <input asp-for="EmergencyContactName" class="form-control" placeholder="Contact person" required />
+                                <span asp-validation-for="EmergencyContactName" class="text-danger small"></span>
+                            </div>
+                            <div class="col-md-6">
+                                <label asp-for="EmergencyContactNo" class="form-label small fw-bold text-muted text-uppercase">Emergency Contact Phone *</label>
+                                <input asp-for="EmergencyContactNo" class="form-control" placeholder="+27 82 123 4567" required />
+                                <span asp-validation-for="EmergencyContactNo" class="text-danger small"></span>
+                            </div>
+
+                            <div class="col-12">
+                                <label asp-for="MedicalAidDetails" class="form-label small fw-bold text-muted text-uppercase">Medical Aid & Scheme Number (Optional)</label>
+                                <input asp-for="MedicalAidDetails" class="form-control" placeholder="Discovery Health / Bonitas / Medihelp - Policy #123456" />
+                            </div>
+                        </div>
+
+                        <!-- 3. Waiver & Indemnity -->
+                        <div class="p-3 bg-light rounded-3 border mb-4">
+                            <div class="form-check">
+                                <input asp-for="AcceptTerms" class="form-check-input" required />
+                                <label asp-for="AcceptTerms" class="form-check-label small text-muted">
+                                    I agree to the RaceDay event regulations, rules of the road, and race indemnity waiver. I confirm I am physically fit to participate.
+                                </label>
+                            </div>
+                            <span asp-validation-for="AcceptTerms" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="d-flex justify-content-end gap-3 pt-3 border-top">
+                            <a asp-controller="Events" asp-action="Details" asp-route-id="@Model.EventId" class="btn btn-outline-secondary px-4">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-raceday-accent px-5 py-2 fs-6">
+                                <i class="bi bi-check-circle-fill me-1"></i> Confirm & Enter Race Immediately
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
