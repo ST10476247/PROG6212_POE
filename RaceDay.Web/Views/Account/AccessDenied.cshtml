@@ -1,0 +1,29 @@
+@{
+    ViewData["Title"] = "Access Denied";
+}
+
+<div class="container py-5 text-center">
+    <div class="row justify-content-center">
+        <div class="col-lg-6 col-md-8">
+            <div class="card border-0 shadow-lg rounded-4 p-5">
+                <div class="text-danger mb-3">
+                    <i class="bi bi-shield-lock-fill" style="font-size: 4rem;"></i>
+                </div>
+                <h2 class="fw-bold text-dark mb-2">Access Restricted</h2>
+                <p class="text-muted mb-4">
+                    You do not have the required permissions or role to view this section of the RaceDay platform.
+                    RaceDay enforces strict role isolation between <strong>Race Organisers</strong> and <strong>Athletes / Participants</strong>.
+                </p>
+                <div class="d-flex justify-content-center gap-3">
+                    <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary rounded-pill px-4">
+                        <i class="bi bi-house me-1"></i> Return Home
+                    </a>
+                    <a asp-controller="Account" asp-action="Login" class="btn btn-raceday-primary rounded-pill px-4">
+                        <i class="bi bi-box-arrow-in-right me-1"></i> Switch Account
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+

@@ -1,0 +1,209 @@
+@{
+    ViewData["Title"] = "Create Account";
+    string activeRole = ViewBag.ActiveRole as string ?? "Participant";
+    var participantModel = Model as RegisterParticipantViewModel ?? new RegisterParticipantViewModel();
+    var organiserModel = Model as RegisterOrganiserViewModel ?? new RegisterOrganiserViewModel();
+}
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
+                <!-- Header Banner -->
+                <div class="p-4 text-white text-center" style="background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 100%);">
+                    <div class="brand-icon mx-auto mb-2"><i class="bi bi-person-plus-fill"></i></div>
+                    <h3 class="fw-bold mb-1">Join the RaceDay Community</h3>
+                    <p class="text-white-50 small mb-0">Select your account role to get started</p>
+                </div>
+
+                <div class="p-4 p-md-5">
+                    <!-- Role Tabs Navigation -->
+                    <ul class="nav nav-pills nav-justified mb-4 p-1 bg-light rounded-pill" id="roleTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link rounded-pill fw-bold @(activeRole == "Participant" ? "active bg-primary text-white" : "text-muted")"
+                                    id="participant-tab" data-bs-toggle="pill" data-bs-target="#participant-pane" type="button" role="tab" aria-selected="@(activeRole == "Participant")">
+                                <i class="bi bi-person-walking me-1"></i> Athlete / Participant
+                            </button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link rounded-pill fw-bold @(activeRole == "Organiser" ? "active bg-warning text-dark" : "text-muted")"
+                                    id="organiser-tab" data-bs-toggle="pill" data-bs-target="#organiser-pane" type="button" role="tab" aria-selected="@(activeRole == "Organiser")">
+                                <i class="bi bi-flag-fill me-1"></i> Race Organiser / Club
+                            </button>
+                        </li>
+                    </ul>
+
+                    <div class="tab-content" id="roleTabsContent">
+                        <!-- PARTICIPANT REGISTRATION FORM -->
+                        <div class="tab-pane fade @(activeRole == "Participant" ? "show active" : "")" id="participant-pane" role="tabpanel">
+                            <form asp-action="RegisterParticipant" method="post" novalidate>
+                                <div asp-validation-summary="ModelOnly" class="alert alert-danger small py-2 mb-3"></div>
+
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold text-muted text-uppercase">Full Name *</label>
+                                        <input name="FullName" value="@participantModel.FullName" class="form-control" placeholder="e.g. Sipho Dlamini" required />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold text-muted text-uppercase">Email Address *</label>
+                                        <input type="email" name="Email" value="@participantModel.Email" class="form-control" placeholder="sipho@email.co.za" required />
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold text-muted text-uppercase">Password *</label>
+                                        <input type="password" name="Password" class="form-control" placeholder="Minimum 6 characters" required />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold text-muted text-uppercase">Confirm Password *</label>
+                                        <input type="password" name="ConfirmPassword" class="form-control" placeholder="Re-type password" required />
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-semibold text-muted text-uppercase">Phone Number</label>
+                                        <input name="PhoneNumber" value="@participantModel.PhoneNumber" class="form-control" placeholder="+27 82 123 4567" />
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-semibold text-muted text-uppercase">Province</label>
+                                        <select name="Province" class="form-select">
+                                            <option value="Gauteng">Gauteng</option>
+                                            <option value="Western Cape">Western Cape</option>
+                                            <option value="KwaZulu-Natal">KwaZulu-Natal</option>
+                                            <option value="Eastern Cape">Eastern Cape</option>
+                                            <option value="Free State">Free State</option>
+                                            <option value="Mpumalanga">Mpumalanga</option>
+                                            <option value="Limpopo">Limpopo</option>
+                                            <option value="North West">North West</option>
+                                            <option value="Northern Cape">Northern Cape</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-semibold text-muted text-uppercase">Date of Birth *</label>
+                                        <input type="date" name="DateOfBirth" value="@participantModel.DateOfBirth.ToString("yyyy-MM-dd")" class="form-control" required />
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-semibold text-muted text-uppercase">Gender</label>
+                                        <select name="Gender" class="form-select">
+                                            <option value="Male">Male</option>
+                                            <option value="Female">Female</option>
+                                            <option value="Other">Other</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-semibold text-muted text-uppercase">SA ID / Passport</label>
+                                        <input name="SAIDOrPassport" value="@participantModel.SAIDOrPassport" class="form-control" placeholder="13 Digit SA ID" />
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-semibold text-muted text-uppercase">T-Shirt Size</label>
+                                        <select name="TshirtSize" class="form-select">
+                                            <option value="XS">XS</option>
+                                            <option value="S">S</option>
+                                            <option value="M" selected>M</option>
+                                            <option value="L">L</option>
+                                            <option value="XL">XL</option>
+                                            <option value="XXL">XXL</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-semibold text-muted text-uppercase">Athletic Club</label>
+                                        <input name="ClubName" value="@participantModel.ClubName" class="form-control" placeholder="e.g. Nedbank Running Club" />
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-semibold text-muted text-uppercase">Emergency Contact Name</label>
+                                        <input name="EmergencyContactName" value="@participantModel.EmergencyContactName" class="form-control" placeholder="Contact person" />
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-semibold text-muted text-uppercase">Emergency Contact Phone</label>
+                                        <input name="EmergencyContactNo" value="@participantModel.EmergencyContactNo" class="form-control" placeholder="+27 82 ..." />
+                                    </div>
+                                </div>
+
+                                <div class="mt-4 pt-2">
+                                    <button type="submit" class="btn btn-raceday-primary w-100 py-2 fs-6">
+                                        <i class="bi bi-person-check-fill me-1"></i> Complete Athlete Registration
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- ORGANISER REGISTRATION FORM -->
+                        <div class="tab-pane fade @(activeRole == "Organiser" ? "show active" : "")" id="organiser-pane" role="tabpanel">
+                            <form asp-action="RegisterOrganiser" method="post" novalidate>
+                                <div asp-validation-summary="ModelOnly" class="alert alert-danger small py-2 mb-3"></div>
+
+                                <div class="row g-3">
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold text-muted text-uppercase">Contact Person Name *</label>
+                                        <input name="FullName" value="@organiserModel.FullName" class="form-control" placeholder="e.g. John Smith" required />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold text-muted text-uppercase">Login Email Address *</label>
+                                        <input type="email" name="Email" value="@organiserModel.Email" class="form-control" placeholder="director@club.co.za" required />
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold text-muted text-uppercase">Password *</label>
+                                        <input type="password" name="Password" class="form-control" placeholder="Minimum 6 characters" required />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold text-muted text-uppercase">Confirm Password *</label>
+                                        <input type="password" name="ConfirmPassword" class="form-control" placeholder="Re-type password" required />
+                                    </div>
+
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold text-muted text-uppercase">Company / Club Name *</label>
+                                        <input name="CompanyName" value="@organiserModel.CompanyName" class="form-control" placeholder="e.g. Comrades Marathon Association" required />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-semibold text-muted text-uppercase">Company / CIPC Reg No</label>
+                                        <input name="CompanyRegNo" value="@organiserModel.CompanyRegNo" class="form-control" placeholder="2026/012345/08" />
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-semibold text-muted text-uppercase">Public Contact Email</label>
+                                        <input type="email" name="ContactEmail" value="@organiserModel.ContactEmail" class="form-control" placeholder="info@club.co.za" />
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-semibold text-muted text-uppercase">Phone Number</label>
+                                        <input name="PhoneNumber" value="@organiserModel.PhoneNumber" class="form-control" placeholder="+27 11 000 0000" />
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-semibold text-muted text-uppercase">Province</label>
+                                        <select name="Province" class="form-select">
+                                            <option value="Gauteng">Gauteng</option>
+                                            <option value="Western Cape">Western Cape</option>
+                                            <option value="KwaZulu-Natal">KwaZulu-Natal</option>
+                                            <option value="Eastern Cape">Eastern Cape</option>
+                                            <option value="Free State">Free State</option>
+                                            <option value="Mpumalanga">Mpumalanga</option>
+                                            <option value="Limpopo">Limpopo</option>
+                                            <option value="North West">North West</option>
+                                            <option value="Northern Cape">Northern Cape</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="mt-4 pt-2">
+                                    <button type="submit" class="btn btn-raceday-accent w-100 py-2 fs-6">
+                                        <i class="bi bi-briefcase-fill me-1"></i> Complete Organiser Registration
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                    <div class="text-center mt-4 pt-2 border-top">
+                        <span class="small text-muted">Already registered?</span>
+                        <a asp-action="Login" class="small fw-bold text-primary text-decoration-none ms-1">Sign In Here</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
