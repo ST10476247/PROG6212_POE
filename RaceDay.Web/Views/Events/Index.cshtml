@@ -1,0 +1,174 @@
+@model EventFilterViewModel
+@{
+    ViewData["Title"] = "Events Directory";
+}
+
+<div class="bg-dark text-white py-4 border-bottom border-secondary mb-4">
+    <div class="container">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+            <div>
+                <h1 class="h3 fw-bold mb-1">South African Road Events Directory</h1>
+                <p class="text-white-50 small mb-0">Search and filter road running, cycling, and walking events</p>
+            </div>
+            <div class="mt-3 mt-md-0">
+                <span class="badge bg-primary px-3 py-2 rounded-pill">@Model.TotalCount Events Found</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container mb-5">
+    <!-- Filter Bar -->
+    <div class="card border-0 shadow-sm rounded-4 p-4 mb-4 bg-white">
+        <form method="get" asp-action="Index">
+            <div class="row g-3">
+                <div class="col-lg-3 col-md-6">
+                    <label class="form-label small fw-bold text-muted text-uppercase">Keyword Search</label>
+                    <input type="text" name="Search" value="@Model.Search" class="form-control" placeholder="Event name, landmark..." />
+                </div>
+                <div class="col-lg-2 col-md-6">
+                    <label class="form-label small fw-bold text-muted text-uppercase">Sport Type</label>
+                    <select name="EventType" class="form-select">
+                        <option value="">All Sports</option>
+                        <option value="Running" selected="@(Model.EventType == "Running")">Running</option>
+                        <option value="Cycling" selected="@(Model.EventType == "Cycling")">Cycling</option>
+                        <option value="Walking" selected="@(Model.EventType == "Walking")">Walking</option>
+                    </select>
+                </div>
+                <div class="col-lg-2 col-md-6">
+                    <label class="form-label small fw-bold text-muted text-uppercase">Province</label>
+                    <select name="Province" class="form-select">
+                        <option value="">All Provinces</option>
+                        <option value="Gauteng" selected="@(Model.Province == "Gauteng")">Gauteng</option>
+                        <option value="Western Cape" selected="@(Model.Province == "Western Cape")">Western Cape</option>
+                        <option value="KwaZulu-Natal" selected="@(Model.Province == "KwaZulu-Natal")">KwaZulu-Natal</option>
+                        <option value="Eastern Cape" selected="@(Model.Province == "Eastern Cape")">Eastern Cape</option>
+                        <option value="Free State" selected="@(Model.Province == "Free State")">Free State</option>
+                        <option value="Mpumalanga" selected="@(Model.Province == "Mpumalanga")">Mpumalanga</option>
+                        <option value="Limpopo" selected="@(Model.Province == "Limpopo")">Limpopo</option>
+                        <option value="North West" selected="@(Model.Province == "North West")">North West</option>
+                        <option value="Northern Cape" selected="@(Model.Province == "Northern Cape")">Northern Cape</option>
+                    </select>
+                </div>
+                <div class="col-lg-2 col-md-6">
+                    <label class="form-label small fw-bold text-muted text-uppercase">Status</label>
+                    <select name="Status" class="form-select">
+                        <option value="">All Statuses</option>
+                        <option value="Open" selected="@(Model.Status == "Open")">Open for Entry</option>
+                        <option value="Closed" selected="@(Model.Status == "Closed")">Registration Closed</option>
+                        <option value="Completed" selected="@(Model.Status == "Completed")">Completed</option>
+                    </select>
+                </div>
+                <div class="col-lg-3 col-md-12 d-flex align-items-end gap-2">
+                    <button type="submit" class="btn btn-raceday-primary flex-grow-1 py-2">
+                        <i class="bi bi-funnel me-1"></i> Apply
+                    </button>
+                    <a asp-action="Index" class="btn btn-outline-secondary py-2" title="Reset Filters">
+                        <i class="bi bi-arrow-counterclockwise"></i>
+                    </a>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Events Grid -->
+    @if (!Model.Items.Any())
+    {
+        <div class="card border-0 shadow-sm rounded-4 p-5 text-center my-4">
+            <div class="mb-3 text-muted"><i class="bi bi-calendar-x fs-1"></i></div>
+            <h4>No Events Match Your Search</h4>
+            <p class="text-muted">Please adjust your filters or search keywords.</p>
+            <div class="mt-2">
+                <a asp-action="Index" class="btn btn-outline-primary rounded-pill px-4">Show All Events</a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4 mb-4">
+            @foreach (var ev in Model.Items)
+            {
+                <div class="col-lg-4 col-md-6">
+                    <div class="event-card">
+                        <div class="event-card-banner" style="background-image: url('@(string.IsNullOrEmpty(ev.BannerUrl) ? "https://images.unsplash.com/photo-1530549387789-4c1017266635?auto=format&fit=crop&w=800&q=80" : ev.BannerUrl)');">
+                            <span class="event-type-badge @(ev.EventType == "Running" ? "bg-primary" : ev.EventType == "Cycling" ? "bg-warning text-dark" : "bg-success")">
+                                <i class="bi @(ev.EventType == "Running" ? "bi-person-walking" : ev.EventType == "Cycling" ? "bi-bicycle" : "bi-tree") me-1"></i>
+                                @ev.EventType
+                            </span>
+                            @if (ev.Status == "Open")
+                            {
+                                <span class="badge-status-confirmed ms-auto small"><i class="bi bi-check-circle-fill"></i> Open</span>
+                            }
+                            else if (ev.Status == "Completed")
+                            {
+                                <span class="badge-status-completed ms-auto small"><i class="bi bi-trophy-fill"></i> Concluded</span>
+                            }
+                            else
+                            {
+                                <span class="badge-status-pending ms-auto small">@ev.Status</span>
+                            }
+                        </div>
+
+                        <div class="event-card-body">
+                            <div class="event-meta-row small text-primary fw-semibold">
+                                <i class="bi bi-calendar3"></i> @ev.StartDate.ToString("ddd, dd MMM yyyy")
+                            </div>
+                            <h4 class="event-card-title">@ev.Title</h4>
+
+                            <div class="event-meta-row">
+                                <i class="bi bi-geo-alt-fill text-danger"></i> @ev.City, @ev.Province
+                            </div>
+                            <div class="event-meta-row">
+                                <i class="bi bi-tags-fill text-muted"></i> @ev.CategoriesCount Available Distance Categories
+                            </div>
+
+                            <p class="text-secondary small mt-2 mb-3 flex-grow-1" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                @ev.Description
+                            </p>
+
+                            <div class="d-flex justify-content-between align-items-center pt-3 border-top mt-auto">
+                                <div>
+                                    <small class="text-muted d-block" style="font-size: 0.72rem;">ENTRY FROM</small>
+                                    <span class="fw-bold fs-5 text-dark">R @ev.EntryFeeZar.ToString("N0")</span>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <a asp-action="Details" asp-route-id="@ev.EventId" class="btn btn-outline-primary btn-sm px-3 rounded-pill">
+                                        Details
+                                    </a>
+                                    @if (ev.Status == "Open")
+                                    {
+                                        <a asp-controller="Participant" asp-action="Enrol" asp-route-eventId="@ev.EventId" class="btn btn-raceday-accent btn-sm px-3 rounded-pill">
+                                            Enter
+                                        </a>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+
+        <!-- Pagination Controls -->
+        @if (Model.TotalPages > 1)
+        {
+            <nav aria-label="Events pagination" class="d-flex justify-content-center mt-4">
+                <ul class="pagination">
+                    <li class="page-item @(Model.Page <= 1 ? "disabled" : "")">
+                        <a class="page-link" asp-action="Index" asp-route-Page="@(Model.Page - 1)" asp-route-Search="@Model.Search" asp-route-EventType="@Model.EventType" asp-route-Province="@Model.Province" asp-route-Status="@Model.Status">Previous</a>
+                    </li>
+                    @for (int p = 1; p <= Model.TotalPages; p++)
+                    {
+                        <li class="page-item @(p == Model.Page ? "active" : "")">
+                            <a class="page-link" asp-action="Index" asp-route-Page="@p" asp-route-Search="@Model.Search" asp-route-EventType="@Model.EventType" asp-route-Province="@Model.Province" asp-route-Status="@Model.Status">@p</a>
+                        </li>
+                    }
+                    <li class="page-item @(Model.Page >= Model.TotalPages ? "disabled" : "")">
+                        <a class="page-link" asp-action="Index" asp-route-Page="@(Model.Page + 1)" asp-route-Search="@Model.Search" asp-route-EventType="@Model.EventType" asp-route-Province="@Model.Province" asp-route-Status="@Model.Status">Next</a>
+                    </li>
+                </ul>
+            </nav>
+        }
+    }
+</div>
+

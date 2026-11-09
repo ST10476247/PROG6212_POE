@@ -1,0 +1,206 @@
+@model EventFilterViewModel
+@{
+    ViewData["Title"] = "South Africa's Road Event Management Platform";
+    var featuredEvents = ViewBag.FeaturedEvents as List<EventCardViewModel> ?? new List<EventCardViewModel>();
+}
+
+<!-- Hero Section -->
+<section class="hero-raceday">
+    <div class="container position-relative">
+        <div class="row align-items-center g-4">
+            <div class="col-lg-7">
+                <span class="badge bg-warning text-dark fw-bold text-uppercase px-3 py-2 rounded-pill mb-3">
+                    <i class="bi bi-fire me-1"></i> PROG6212 Portfolio of Evidence — Part 3
+                </span>
+                <h1 class="hero-title text-white mb-3">
+                    Race Day Starts <span class="brand-text-accent">Here.</span>
+                </h1>
+                <p class="hero-lead mb-4">
+                    The complete cloud-powered platform for South African road runners, cyclists, and walkers. Discover iconic races, enrol in categories, and track official chip-timed results.
+                </p>
+                <div class="d-flex flex-wrap gap-3">
+                    <a href="#eventsSection" class="btn btn-raceday-accent btn-lg px-4">
+                        <i class="bi bi-compass me-1"></i> Browse Upcoming Races
+                    </a>
+                    <a asp-controller="Account" asp-action="Register" asp-route-role="Organiser" class="btn btn-outline-light btn-lg px-4">
+                        <i class="bi bi-flag-fill me-1"></i> Host an Event
+                    </a>
+                </div>
+            </div>
+            <div class="col-lg-5 d-none d-lg-block">
+                <div class="p-4 rounded-4 bg-white bg-opacity-10 backdrop-blur border border-white border-opacity-25 shadow-lg">
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="stat-icon bg-warning text-dark"><i class="bi bi-trophy-fill"></i></div>
+                        <div>
+                            <h5 class="text-white mb-0 fw-bold">Official Timing Integration</h5>
+                            <small class="text-white-50">Gun time, chip time & podium positions</small>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-3 mb-3">
+                        <div class="stat-icon bg-primary text-white"><i class="bi bi-cloud-arrow-up-fill"></i></div>
+                        <div>
+                            <h5 class="text-white mb-0 fw-bold">Azure Blob Storage</h5>
+                            <small class="text-white-50">High-res race posters & finisher badges</small>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="stat-icon bg-success text-white"><i class="bi bi-box-seam-fill"></i></div>
+                        <div>
+                            <h5 class="text-white mb-0 fw-bold">Docker Containerized</h5>
+                            <small class="text-white-50">One-command container deployment</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Filter & Search Bar Section -->
+<div class="container mt-n4 position-relative" style="margin-top: -2rem;" id="eventsSection">
+    <div class="card shadow-lg border-0 rounded-4 p-3 p-md-4 bg-white">
+        <form method="get" asp-action="Index">
+            <div class="row g-3 align-items-end">
+                <div class="col-lg-4 col-md-6">
+                    <label class="form-label small fw-bold text-uppercase text-muted"><i class="bi bi-search me-1"></i> Search Event</label>
+                    <input type="text" name="Search" value="@Model.Search" class="form-control" placeholder="Search by name or landmark..." />
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <label class="form-label small fw-bold text-uppercase text-muted"><i class="bi bi-bicycle me-1"></i> Sport Type</label>
+                    <select name="EventType" class="form-select">
+                        <option value="">All Sports (Running, Cycling, Walking)</option>
+                        <option value="Running" selected="@(Model.EventType == "Running")">Running</option>
+                        <option value="Cycling" selected="@(Model.EventType == "Cycling")">Cycling</option>
+                        <option value="Walking" selected="@(Model.EventType == "Walking")">Walking</option>
+                    </select>
+                </div>
+                <div class="col-lg-3 col-md-6">
+                    <label class="form-label small fw-bold text-uppercase text-muted"><i class="bi bi-geo-alt-fill me-1"></i> Province</label>
+                    <select name="Province" class="form-select">
+                        <option value="">All 9 SA Provinces</option>
+                        <option value="Gauteng" selected="@(Model.Province == "Gauteng")">Gauteng</option>
+                        <option value="Western Cape" selected="@(Model.Province == "Western Cape")">Western Cape</option>
+                        <option value="KwaZulu-Natal" selected="@(Model.Province == "KwaZulu-Natal")">KwaZulu-Natal</option>
+                        <option value="Eastern Cape" selected="@(Model.Province == "Eastern Cape")">Eastern Cape</option>
+                        <option value="Free State" selected="@(Model.Province == "Free State")">Free State</option>
+                        <option value="Mpumalanga" selected="@(Model.Province == "Mpumalanga")">Mpumalanga</option>
+                        <option value="Limpopo" selected="@(Model.Province == "Limpopo")">Limpopo</option>
+                        <option value="North West" selected="@(Model.Province == "North West")">North West</option>
+                        <option value="Northern Cape" selected="@(Model.Province == "Northern Cape")">Northern Cape</option>
+                    </select>
+                </div>
+                <div class="col-lg-2 col-md-6">
+                    <button type="submit" class="btn btn-raceday-primary w-100 py-2">
+                        <i class="bi bi-funnel-fill me-1"></i> Filter
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Upcoming Events Directory -->
+<div class="container my-5">
+    <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4">
+        <div>
+            <span class="text-uppercase fw-bold text-primary small letter-spacing-1">Race Calendar</span>
+            <h2 class="fw-bold mb-0">Upcoming South African Events</h2>
+        </div>
+        <div class="text-muted small mt-2 mt-md-0">
+            Showing @Model.Items.Count of @Model.TotalCount road events
+        </div>
+    </div>
+
+    @if (!Model.Items.Any())
+    {
+        <div class="card border-0 shadow-sm rounded-4 p-5 text-center my-4">
+            <div class="mb-3 text-muted"><i class="bi bi-calendar-x fs-1"></i></div>
+            <h4>No Events Found Matching Your Filter</h4>
+            <p class="text-muted">Try clearing your search query or sport filter to see all upcoming races.</p>
+            <div class="mt-2">
+                <a asp-action="Index" class="btn btn-outline-primary rounded-pill px-4">Reset Filters</a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var ev in Model.Items)
+            {
+                <div class="col-lg-4 col-md-6">
+                    <div class="event-card">
+                        <!-- Banner image loaded from Azure Blob Storage or local fallback -->
+                        <div class="event-card-banner" style="background-image: url('@(string.IsNullOrEmpty(ev.BannerUrl) ? "https://images.unsplash.com/photo-1530549387789-4c1017266635?auto=format&fit=crop&w=800&q=80" : ev.BannerUrl)');">
+                            <span class="event-type-badge @(ev.EventType == "Running" ? "bg-primary" : ev.EventType == "Cycling" ? "bg-warning text-dark" : "bg-success")">
+                                <i class="bi @(ev.EventType == "Running" ? "bi-person-walking" : ev.EventType == "Cycling" ? "bi-bicycle" : "bi-tree") me-1"></i>
+                                @ev.EventType
+                            </span>
+                            @if (ev.Status == "Open")
+                            {
+                                <span class="badge-status-confirmed ms-auto small"><i class="bi bi-check-circle-fill"></i> Entries Open</span>
+                            }
+                            else if (ev.Status == "Completed")
+                            {
+                                <span class="badge-status-completed ms-auto small"><i class="bi bi-trophy-fill"></i> Completed</span>
+                            }
+                            else
+                            {
+                                <span class="badge-status-pending ms-auto small">@ev.Status</span>
+                            }
+                        </div>
+
+                        <div class="event-card-body">
+                            <div class="event-meta-row small text-primary fw-semibold">
+                                <i class="bi bi-calendar3"></i> @ev.StartDate.ToString("ddd, dd MMMM yyyy")
+                            </div>
+                            <h4 class="event-card-title">@ev.Title</h4>
+                            
+                            <div class="event-meta-row">
+                                <i class="bi bi-geo-alt-fill text-danger"></i> @ev.City, @ev.Province
+                            </div>
+                            <div class="event-meta-row">
+                                <i class="bi bi-building text-secondary"></i> Organised by: @(string.IsNullOrEmpty(ev.OrganiserName) ? "Host Club" : ev.OrganiserName)
+                            </div>
+
+                            <p class="text-secondary small mt-2 mb-3 flex-grow-1" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                @ev.Description
+                            </p>
+
+                            <div class="d-flex justify-content-between align-items-center pt-3 border-top mt-auto">
+                                <div>
+                                    <small class="text-muted d-block" style="font-size: 0.75rem;">ENTRY FROM</small>
+                                    <span class="fw-bold fs-5 text-dark">R @ev.EntryFeeZar.ToString("N0")</span>
+                                </div>
+                                <div class="d-flex gap-2">
+                                    <a asp-controller="Events" asp-action="Details" asp-route-id="@ev.EventId" class="btn btn-outline-primary btn-sm px-3 rounded-pill">
+                                        Details
+                                    </a>
+                                    @if (ev.Status == "Open")
+                                    {
+                                        <a asp-controller="Participant" asp-action="Enrol" asp-route-eventId="@ev.EventId" class="btn btn-raceday-accent btn-sm px-3 rounded-pill">
+                                            Enter
+                                        </a>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+<!-- Organiser CTA Banner -->
+<section class="bg-dark text-white py-5 my-5 border-top border-bottom border-secondary">
+    <div class="container text-center py-4">
+        <span class="badge bg-primary px-3 py-2 rounded-pill text-uppercase fw-bold mb-3">Road Race Directors & Athletic Clubs</span>
+        <h2 class="display-6 fw-bold mb-3">Host Your Next Event on RaceDay</h2>
+        <p class="lead text-secondary mx-auto mb-4" style="max-width: 680px;">
+            Seamless category management, automated bib allocations, Azure Blob banner storage, and instantaneous chip-timed leaderboards.
+        </p>
+        <a asp-controller="Account" asp-action="Register" asp-route-role="Organiser" class="btn btn-raceday-accent btn-lg rounded-pill px-5">
+            <i class="bi bi-plus-circle me-2"></i> Register as Race Organiser
+        </a>
+    </div>
+</section>
