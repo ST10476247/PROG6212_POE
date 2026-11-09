@@ -1,0 +1,162 @@
+@model EventEnrolmentListViewModel
+@{
+    ViewData["Title"] = "Enrolments: " + Model.EventTitle;
+}
+
+<div class="bg-dark text-white py-4 border-bottom border-secondary mb-4">
+    <div class="container">
+        <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center">
+            <div>
+                <span class="role-badge-organiser mb-2 d-inline-block">Entrant Roster</span>
+                <h1 class="h3 fw-bold mb-1">Enrolments: @Model.EventTitle</h1>
+                <p class="text-white-50 small mb-0">
+                    <i class="bi bi-calendar-event me-1 text-primary"></i>@Model.EventDate.ToString("dd MMMM yyyy") &bull;
+                    <i class="bi bi-geo-alt me-1 text-danger"></i>@Model.City, @Model.Province
+                </p>
+            </div>
+            <div class="mt-3 mt-md-0 d-flex gap-2">
+                <a asp-action="Results" asp-route-eventId="@Model.EventId" class="btn btn-warning text-dark btn-sm">
+                    <i class="bi bi-trophy-fill me-1"></i> Results Entry
+                </a>
+                <a asp-action="Categories" asp-route-eventId="@Model.EventId" class="btn btn-outline-secondary btn-sm text-white">
+                    <i class="bi bi-tags me-1"></i> Categories
+                </a>
+                <a asp-action="Events" class="btn btn-outline-light btn-sm">
+                    <i class="bi bi-arrow-left me-1"></i> Events List
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="container mb-5">
+    <!-- Stat Counters for Enrolments -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3 col-6">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white text-center">
+                <small class="text-muted fw-bold text-uppercase" style="font-size: 0.72rem;">Total Entrants</small>
+                <div class="fs-3 fw-bold text-dark">@Model.TotalEnrolments / @Model.MaxEntries</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white text-center">
+                <small class="text-muted fw-bold text-uppercase" style="font-size: 0.72rem;">Confirmed Entries</small>
+                <div class="fs-3 fw-bold text-success">@Model.ConfirmedCount</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white text-center">
+                <small class="text-muted fw-bold text-uppercase" style="font-size: 0.72rem;">Pending Entries</small>
+                <div class="fs-3 fw-bold text-warning">@Model.PendingCount</div>
+            </div>
+        </div>
+        <div class="col-md-3 col-6">
+            <div class="card border-0 shadow-sm rounded-4 p-3 bg-white text-center">
+                <small class="text-muted fw-bold text-uppercase" style="font-size: 0.72rem;">Cancelled</small>
+                <div class="fs-3 fw-bold text-secondary">@Model.CancelledCount</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Enrolments Table (Requirement 3: View all Participants, selected category, enrolment status) -->
+    <div class="table-card">
+        <div class="p-3 border-bottom d-flex justify-content-between align-items-center">
+            <h6 class="fw-bold text-dark mb-0"><i class="bi bi-people-fill text-primary me-2"></i>Participant Roster</h6>
+            <span class="badge bg-primary rounded-pill">@Model.Enrolments.Count Participants</span>
+        </div>
+
+        @if (!Model.Enrolments.Any())
+        {
+            <div class="p-5 text-center text-muted">
+                <i class="bi bi-people fs-1 d-block mb-2"></i>
+                <h6>No Athletes Enrolled Yet</h6>
+                <p class="small mb-0">Participants will appear here once they register through the RaceDay athlete portal.</p>
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-raceday mb-0 align-middle">
+                    <thead>
+                        <tr>
+                            <th>Bib #</th>
+                            <th>Participant</th>
+                            <th>Category & Distance</th>
+                            <th>Club / Affiliation</th>
+                            <th>Enrolment Date</th>
+                            <th>Status</th>
+                            <th class="text-end">Update Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var p in Model.Enrolments)
+                        {
+                            <tr>
+                                <td>
+                                    <div class="race-bib py-1 px-2" style="border-width: 2px;">
+                                        <div class="race-bib-header" style="font-size: 0.55rem;">BIB</div>
+                                        <div class="race-bib-number" style="font-size: 1.25rem;">#@p.BibNumber</div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <div class="fw-bold text-dark">@p.ParticipantName</div>
+                                    <small class="text-muted">@p.ParticipantEmail</small>
+                                    @if (!string.IsNullOrEmpty(p.PhoneNumber))
+                                    {
+                                        <small class="text-muted d-block"><i class="bi bi-telephone"></i> @p.PhoneNumber</small>
+                                    }
+                                </td>
+                                <td>
+                                    <div class="fw-semibold text-dark">@p.CategoryName</div>
+                                    <span class="badge bg-primary">@p.DistanceKm km</span>
+                                    @if (!string.IsNullOrEmpty(p.TshirtSize))
+                                    {
+                                        <span class="badge bg-light text-dark border">Size: @p.TshirtSize</span>
+                                    }
+                                </td>
+                                <td>
+                                    <small class="text-secondary">@(string.IsNullOrEmpty(p.ClubName) ? "Individual Runner" : p.ClubName)</small>
+                                    @if (!string.IsNullOrEmpty(p.EmergencyContact))
+                                    {
+                                        <div class="text-muted small" style="font-size: 0.72rem;">ICE: @p.EmergencyContact</div>
+                                    }
+                                </td>
+                                <td>
+                                    <small class="text-muted">@p.EnrolmentDate.ToString("dd MMM yyyy, HH:mm")</small>
+                                </td>
+                                <td>
+                                    @if (p.Status.Equals("Confirmed", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <span class="badge-status-confirmed small"><i class="bi bi-check-circle-fill"></i> Confirmed</span>
+                                    }
+                                    else if (p.Status.Equals("Pending", StringComparison.OrdinalIgnoreCase))
+                                    {
+                                        <span class="badge-status-pending small"><i class="bi bi-hourglass-split"></i> Pending</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="badge-status-cancelled small"><i class="bi bi-x-circle-fill"></i> Cancelled</span>
+                                    }
+                                </td>
+                                <td class="text-end">
+                                    <form asp-action="UpdateEnrolmentStatus" method="post" class="d-inline">
+                                        <input type="hidden" name="enrolmentId" value="@p.EnrolmentId" />
+                                        <input type="hidden" name="eventId" value="@Model.EventId" />
+                                        <div class="input-group input-group-sm d-inline-flex" style="width: 140px;">
+                                            <select name="status" class="form-select form-select-sm" onchange="this.form.submit()">
+                                                <option value="Confirmed" selected="@(p.Status == "Confirmed")">Confirmed</option>
+                                                <option value="Pending" selected="@(p.Status == "Pending")">Pending</option>
+                                                <option value="Cancelled" selected="@(p.Status == "Cancelled")">Cancelled</option>
+                                            </select>
+                                        </div>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+

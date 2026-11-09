@@ -1,0 +1,184 @@
+@model CreateEventViewModel
+@{
+    ViewData["Title"] = "Host New Event";
+}
+
+<div class="bg-dark text-white py-4 border-bottom border-secondary mb-4">
+    <div class="container">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <span class="role-badge-organiser mb-2 d-inline-block">Event Wizard</span>
+                <h1 class="h3 fw-bold mb-1">Create New Road Event</h1>
+                <p class="text-white-50 small mb-0">Fill in all event specifications and upload banner poster to Azure Blob Storage</p>
+            </div>
+            <a asp-action="Events" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-arrow-left me-1"></i> Back to Events
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="container mb-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-10">
+            <div class="card shadow-lg border-0 rounded-4 p-4 p-md-5 bg-white">
+                <form asp-action="CreateEvent" method="post" enctype="multipart/form-data" novalidate>
+                    <div asp-validation-summary="ModelOnly" class="alert alert-danger small py-2 mb-4"></div>
+
+                    <!-- Section 1: Core Details -->
+                    <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">
+                        <i class="bi bi-flag-fill text-primary me-2"></i>1. Core Event Information
+                    </h5>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-8">
+                            <label asp-for="Title" class="form-label small fw-bold text-muted text-uppercase">Event Name / Title *</label>
+                            <input asp-for="Title" class="form-control" placeholder="e.g. Soweto Marathon 2026 / Cape Town Cycle Tour" required />
+                            <span asp-validation-for="Title" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="EventType" class="form-label small fw-bold text-muted text-uppercase">Event Type *</label>
+                            <select asp-for="EventType" class="form-select" required>
+                                <option value="Running">Running (Marathon / 10k / 5k)</option>
+                                <option value="Cycling">Cycling (Road Cycle Tour / Time Trial)</option>
+                                <option value="Walking">Walking (Community Peace Walk / Trail)</option>
+                            </select>
+                            <span asp-validation-for="EventType" class="text-danger small"></span>
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="Description" class="form-label small fw-bold text-muted text-uppercase">Event Description *</label>
+                            <textarea asp-for="Description" class="form-control" rows="4" placeholder="Provide full event overview, race morning itinerary, refreshment points, and cut-off times..." required></textarea>
+                            <span asp-validation-for="Description" class="text-danger small"></span>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Dates & Location -->
+                    <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">
+                        <i class="bi bi-geo-alt-fill text-danger me-2"></i>2. Date & South African Location
+                    </h5>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <label asp-for="StartDate" class="form-label small fw-bold text-muted text-uppercase">Race Start Date *</label>
+                            <input asp-for="StartDate" type="date" class="form-control" required />
+                            <span asp-validation-for="StartDate" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="EndDate" class="form-label small fw-bold text-muted text-uppercase">End Date (Optional for Multi-Day)</label>
+                            <input asp-for="EndDate" type="date" class="form-control" />
+                        </div>
+
+                        <div class="col-md-6">
+                            <label asp-for="City" class="form-label small fw-bold text-muted text-uppercase">Host City / Town *</label>
+                            <input asp-for="City" class="form-control" placeholder="e.g. Durban, Johannesburg, Cape Town" required />
+                            <span asp-validation-for="City" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-6">
+                            <label asp-for="Province" class="form-label small fw-bold text-muted text-uppercase">Province *</label>
+                            <select asp-for="Province" class="form-select" required>
+                                <option value="Gauteng">Gauteng</option>
+                                <option value="Western Cape">Western Cape</option>
+                                <option value="KwaZulu-Natal">KwaZulu-Natal</option>
+                                <option value="Eastern Cape">Eastern Cape</option>
+                                <option value="Free State">Free State</option>
+                                <option value="Mpumalanga">Mpumalanga</option>
+                                <option value="Limpopo">Limpopo</option>
+                                <option value="North West">North West</option>
+                                <option value="Northern Cape">Northern Cape</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Section 3: Entries, Fees & Elevation -->
+                    <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">
+                        <i class="bi bi-speedometer2 text-success me-2"></i>3. Entrant Field & Route Specs
+                    </h5>
+
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-4">
+                            <label asp-for="EntryFeeZar" class="form-label small fw-bold text-muted text-uppercase">Base Entry Fee (ZAR) *</label>
+                            <div class="input-group">
+                                <span class="input-group-text">R</span>
+                                <input asp-for="EntryFeeZar" type="number" step="10" class="form-control" placeholder="250" required />
+                            </div>
+                            <span asp-validation-for="EntryFeeZar" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="MaxEntries" class="form-label small fw-bold text-muted text-uppercase">Max Field Entries *</label>
+                            <input asp-for="MaxEntries" type="number" class="form-control" placeholder="1000" required />
+                            <span asp-validation-for="MaxEntries" class="text-danger small"></span>
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="Status" class="form-label small fw-bold text-muted text-uppercase">Event Status</label>
+                            <select asp-for="Status" class="form-select">
+                                <option value="Open">Open for Registration</option>
+                                <option value="Draft">Draft (Hidden from public)</option>
+                                <option value="Closed">Closed</option>
+                            </select>
+                        </div>
+
+                        <div class="col-md-4">
+                            <label asp-for="ElevationGainMeters" class="form-label small fw-bold text-muted text-uppercase">Elevation Gain (Meters)</label>
+                            <input asp-for="ElevationGainMeters" type="number" class="form-control" placeholder="150" />
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="TerrainType" class="form-label small fw-bold text-muted text-uppercase">Terrain Type</label>
+                            <input asp-for="TerrainType" class="form-control" placeholder="Road / Tarmac / Paved" />
+                        </div>
+                        <div class="col-md-4">
+                            <label asp-for="RouteUrl" class="form-label small fw-bold text-muted text-uppercase">Online Route / GPS URL</label>
+                            <input asp-for="RouteUrl" type="url" class="form-control" placeholder="https://strava.com/routes/..." />
+                        </div>
+
+                        <div class="col-12">
+                            <label asp-for="KeyLandmarks" class="form-label small fw-bold text-muted text-uppercase">Key Landmarks along the Course</label>
+                            <input asp-for="KeyLandmarks" class="form-control" placeholder="e.g. Polly Shorts, Botha's Hill, Chapman's Peak, Vilakazi Street" />
+                        </div>
+                    </div>
+
+                    <!-- Section 4: Azure Blob Storage Banner Upload (Requirement 5) -->
+                    <h5 class="fw-bold text-dark border-bottom pb-2 mb-3">
+                        <i class="bi bi-cloud-arrow-up-fill text-info me-2"></i>4. Azure Blob Storage Banner Upload
+                    </h5>
+
+                    <div class="p-3 bg-light rounded-4 border mb-4">
+                        <div class="d-flex align-items-center gap-2 mb-2">
+                            <i class="bi bi-info-circle-fill text-info fs-5"></i>
+                            <strong class="text-dark">Cloud-Integrated File Storage (Azure Blob Storage)</strong>
+                        </div>
+                        <p class="small text-muted mb-3">
+                            Upload your official race banner or poster. The MVC application sends the file stream directly to the Part 2 RESTful API, which uploads the asset into Azure Blob Storage container <code>raceday-banners</code>.
+                        </p>
+                        
+                        <div class="mb-3">
+                            <label asp-for="BannerImageFile" class="form-label small fw-bold text-uppercase text-muted">Select Banner Image File (.jpg, .jpeg, .png, .webp)</label>
+                            <input asp-for="BannerImageFile" type="file" class="form-control" accept="image/*" />
+                            <span asp-validation-for="BannerImageFile" class="text-danger small"></span>
+                        </div>
+
+                        <div class="text-muted small">
+                            <em>Optional: Alternatively specify an existing web image URL below if you already have one hosted.</em>
+                        </div>
+                        <div class="mt-2">
+                            <input asp-for="BannerUrl" class="form-control form-control-sm" placeholder="https://... (Optional fallback URL)" />
+                        </div>
+                    </div>
+
+                    <!-- Submit Buttons -->
+                    <div class="d-flex justify-content-end gap-3 pt-3 border-top">
+                        <a asp-action="Events" class="btn btn-outline-secondary px-4">Cancel</a>
+                        <button type="submit" class="btn btn-raceday-accent px-5 py-2 fs-6">
+                            <i class="bi bi-check-circle-fill me-1"></i> Save Event & Continue to Categories &rarr;
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+
