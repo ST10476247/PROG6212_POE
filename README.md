@@ -22,7 +22,7 @@
 
 - [x] **Part 1 — System Planning, ERD & Database Design** (Completed & Submitted)
 - [x] **Part 2 — RESTful API Development & Unit Testing** (Completed & Submitted)
-- [x] **Part 3 — MVC Web Application, Azure Blob Storage & Docker Containerisation** (✅ **YOU ARE HERE — 100/100 Marks Target**)
+- [x] **Part 3 — MVC Web Application, Azure Blob Storage & Docker Containerisation** 
 
 ---
 
@@ -280,21 +280,6 @@ Status: ALL CHECKS PASSED (GREEN BUILD)
 > 🎞️ **Unlisted YouTube Video Link:**  
 > `https://youtu.be/REPLACE_WITH_YOUR_UNLISTED_VIDEO_ID`
 
-### Video Presentation Structure (8–10 Minutes):
-1. **[0:00 – 1:00] Introduction**: Student name (Lesedi Mogatwe), student number (ST10476247), module (PROG6212 POE Part 2), explaining the RESTful API architecture.
-2. **[1:00 – 2:30] Solution Architecture & EF Core**: Walk through `RaceDay.API` folder structure, 8 core entities matching Part 1 ERD, `RaceDayDbContext` fluent API, and `DbInitializer` with South African seed data.
-3. **[2:30 – 4:00] Authentication & Session Security**: Explain BCrypt password hashing, session state persistence (`HttpContext.Session`), JWT bearer tokens, and `[RequireRole]` / `[RequireAuth]` action filters.
-4. **[4:00 – 6:30] Live Swagger UI Walkthrough**:
-   - Open `http://localhost:5000/swagger` in browser.
-   - Run `POST /api/auth/login` as Organiser (`tebogo@soulcityevents.co.za`), copy token, authorize in Swagger.
-   - Demonstrate `POST /api/events` (Create Event), `GET /api/events` (List Events with filters).
-   - Log in as Participant (`sibusiso.ndlovu@gmail.com`), demonstrate `POST /api/enrolments` (enrol into category, show auto bib number `A-0102` and payment reference).
-   - Demonstrate role rejection: attempt to call `POST /api/events` with Participant token, observe **403 Forbidden**.
-   - Capture finish time with `POST /api/results`, view updated leaderboard at `GET /api/events/{id}/results`.
-5. **[6:30 – 8:00] Live Unit Tests Execution**: Run `dotnet test` in terminal, show all 30 tests passing with 0 failures.
-6. **[8:00 – 8:45] GitHub Actions Green Build & Git Commits**: Show the green checkmark in GitHub Actions and scroll through 20+ meaningful commits.
-7. **[8:45 – 9:00] Conclusion**: Summary of Part 2 deliverables and preview of Part 3 (MVC Frontend, Azure Blob Storage, Docker containerisation).
-
 ---
 
 ## 🚀 How to Run Locally
@@ -501,16 +486,6 @@ Then open http://localhost:5000/swagger
 
 > 🎞️ **Unlisted YouTube Video Link:**
 > `https://youtu.be/REPLACE_WITH_YOUR_PART3_VIDEO_ID`
-
-### Video Presentation Structure (8–12 Minutes):
-1. **[0:00 – 1:00] Introduction**: Lesedi Mogatwe, ST10476247, PROG6212 POE Part 3 overview.
-2. **[1:00 – 3:00] Architecture Walkthrough**: MVC project structure, IRaceDayApiClient, session management, AuthorizeRoleAttribute.
-3. **[3:00 – 5:30] Organiser Interface Demo**: Dashboard, create event with banner upload, manage categories, view enrolment roster, capture results.
-4. **[5:30 – 7:30] Participant Interface Demo**: Browse events, enrol into category, My Events (colour-coded status), My Results (finishing position), Profile update with picture upload.
-5. **[7:30 – 9:00] Azure Blob Storage**: Show banner upload flow, image stored in blob / local fallback, displayed on event detail page.
-6. **[9:00 – 10:30] Docker Demo**: `docker compose up --build`, both containers starting, app working identically to local run.
-7. **[10:30 – 11:30] CI/CD Green Build**: Part 3 GitHub Actions green build, 20+ commits scrolled.
-8. **[11:30 – 12:00] Conclusion**: Summary of all 3 POE parts.
 
 ---
 
