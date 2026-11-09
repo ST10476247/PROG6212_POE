@@ -5,14 +5,24 @@
 > **Student Number:** ST10476247  
 > **Repository:** [https://github.com/ST10476247/PROG6212_POE](https://github.com/ST10476247/PROG6212_POE)
 
+[![RaceDay Part 3 - MVC + API + Docker CI](https://github.com/ST10476247/PROG6212_POE/actions/workflows/part3-ci.yml/badge.svg)](https://github.com/ST10476247/PROG6212_POE/actions/workflows/part3-ci.yml)
 [![RaceDay Part 2 - RESTful API & Unit Tests CI](https://github.com/ST10476247/PROG6212_POE/actions/workflows/part2-ci.yml/badge.svg)](https://github.com/ST10476247/PROG6212_POE/actions/workflows/part2-ci.yml)
 ![Tests](https://img.shields.io/badge/Unit%20Tests-30%20Passed%20(100%25)-brightgreen?style=flat-square)
 ![Framework](https://img.shields.io/badge/.NET-8.0%20LTS-purple?style=flat-square)
+![Docker](https://img.shields.io/badge/Docker-Containerised-2496ED?style=flat-square&logo=docker&logoColor=white)
+![MVC](https://img.shields.io/badge/ASP.NET%20Core-MVC%20Web%20App-512BD4?style=flat-square)
+![Azure](https://img.shields.io/badge/Azure-Blob%20Storage-0078D4?style=flat-square&logo=microsoft-azure)
 ![ORM](https://img.shields.io/badge/Entity%20Framework%20Core-Code--First-blue?style=flat-square)
 ![Security](https://img.shields.io/badge/Auth-Session%20%2B%20JWT%20Bearer-green?style=flat-square)
 ![Documentation](https://img.shields.io/badge/API%20Docs-Swagger%20%2F%20OpenAPI-orange?style=flat-square)
 
 ---
+
+## 🧭 POE Progressive Roadmap
+
+- [x] **Part 1 — System Planning, ERD & Database Design** (Completed & Submitted)
+- [x] **Part 2 — RESTful API Development & Unit Testing** (Completed & Submitted)
+- [x] **Part 3 — MVC Web Application, Azure Blob Storage & Docker Containerisation** (✅ **YOU ARE HERE — 100/100 Marks Target**)
 
 ---
 
@@ -335,3 +345,177 @@ https://localhost:5001/swagger
 - **Author:** Lesedi Mogatwe (ST10476247)
 - **Module:** PROG6212 — Portfolio of Evidence (Part 2)
 - Generative AI coding assistance was utilized as a pair-programming tool to format boilerplate syntax, structure XML comments, and draft unit test scaffolding. All architectural decisions, entity schemas, business rules, role authorization boundaries, and endpoint logic were verified, tested, and validated by the student.
+
+---
+
+## 🌐 Part 3 — MVC Web Application, Azure Blob Storage & Docker
+
+Part 3 wraps the Part 2 REST API in a polished, athlete-branded ASP.NET Core MVC web application and containerises the entire platform with Docker.
+
+### Architecture Overview
+
+```
+Browser ──► RaceDay.Web (MVC, port 8080)
+                │
+                │  HTTP (IRaceDayApiClient — typed HttpClient)
+                ▼
+           RaceDay.API (REST, port 5000)
+                │
+                ├── SQL Server / EF Core In-Memory Database
+                └── Azure Blob Storage (event banners & profile pictures)
+```
+
+> **Zero DB access in MVC** — `RaceDay.Web` contains no DbContext, no Entity Framework, and no business logic. Every data operation is delegated to the API via `IRaceDayApiClient`.
+
+### Part 3 Solution Structure
+
+```
+RaceDay/
+├── RaceDay.Web/                             ← ASP.NET Core MVC Project (Part 3)
+│   ├── Common/
+│   │   ├── SessionKeys.cs                   ← Session key constants
+│   │   └── UserSessionExtensions.cs         ← SetUser / GetCurrentUser / IsLoggedIn
+│   ├── Controllers/
+│   │   ├── HomeController.cs                ← Public home / events listing
+│   │   ├── AccountController.cs             ← Login, Register, Logout
+│   │   ├── EventsController.cs              ← Public event details & enrolment flow
+│   │   ├── OrganiserController.cs           ← Full organiser dashboard (Organiser role)
+│   │   └── ParticipantController.cs         ← Athlete dashboard (Participant role)
+│   ├── Filters/
+│   │   └── AuthorizeRoleAttribute.cs        ← Session-based role guard (IActionFilter)
+│   ├── Models/ViewModels/
+│   │   ├── AuthViewModels.cs
+│   │   ├── EventViewModels.cs
+│   │   ├── CategoryViewModels.cs
+│   │   ├── EnrolmentViewModels.cs
+│   │   ├── ResultViewModels.cs
+│   │   ├── OrganiserDashboardViewModel.cs
+│   │   └── ProfileViewModels.cs
+│   ├── Services/
+│   │   ├── IRaceDayApiClient.cs             ← Full typed HTTP client interface
+│   │   └── RaceDayApiClient.cs              ← Implementation (all API endpoints)
+│   ├── Views/
+│   │   ├── Account/     Login, Register, AccessDenied
+│   │   ├── Events/      Index (directory), Details (enrol CTA)
+│   │   ├── Home/        Hero landing page
+│   │   ├── Organiser/   Dashboard, Events CRUD, Categories, Enrolments, Results
+│   │   ├── Participant/ Home, Enrol, MyEvents, MyResults, Profile
+│   │   └── Shared/      _Layout, Error
+│   ├── wwwroot/
+│   │   ├── css/site.css                     ← Full athletic RaceDay brand theme
+│   │   └── js/site.js                       ← Alert dismiss, auto-rank, demo creds
+│   ├── appsettings.json                     ← ApiSettings:BaseUrl
+│   ├── Program.cs                           ← Session, cookie auth, typed HttpClient
+│   └── Dockerfile                           ← Multi-stage Docker build
+├── RaceDay.API/
+│   ├── Services/
+│   │   ├── IBlobStorageService.cs           ← Azure Blob interface
+│   │   └── AzureBlobStorageService.cs       ← Azure + local fallback implementation
+│   ├── Controllers/
+│   │   └── UploadController.cs              ← /api/upload/banner, /api/upload/avatar
+│   └── Dockerfile                           ← Multi-stage Docker build
+├── docker-compose.yml                       ← Orchestrates API + Web containers
+├── .dockerignore                            ← Excludes bin/obj/secrets from images
+└── .github/workflows/
+    └── part3-ci.yml                         ← CI: Build API + MVC + Docker lint
+```
+
+### Role-Aware UI Features
+
+| Feature | 🟦 Organiser | 🟩 Participant | 🌐 Public |
+|---|:---:|:---:|:---:|
+| Browse & filter upcoming events | ✅ | ✅ | ✅ |
+| View event detail & categories | ✅ | ✅ | ✅ |
+| Register / Log in | ✅ | ✅ | ✅ |
+| **Organiser Dashboard** (event summary, enrolment counts, upcoming dates) | ✅ | ❌ | ❌ |
+| **Create / Edit / Delete events** (with banner image upload) | ✅ | ❌ | ❌ |
+| **Manage event categories** (age & distance groups) | ✅ | ❌ | ❌ |
+| **View enrolment roster** per event (name, category, status) | ✅ | ❌ | ❌ |
+| **Capture finish times & positions** after event concludes | ✅ | ❌ | ❌ |
+| **Enrol into an event** and select category | ❌ | ✅ | ❌ |
+| **My Events** — enrolled races with coloured status badges | ❌ | ✅ | ❌ |
+| **My Results** — race history with finishing position (e.g. 47th / 312) | ❌ | ✅ | ❌ |
+| **Profile** — update personal info & upload profile picture | ❌ | ✅ | ❌ |
+
+### Azure Blob Storage Integration
+
+- **Event Banners:** Organisers upload banner images via `POST /api/upload/banner` on the API. The MVC app calls the API endpoint (never Azure directly).
+- **Profile Pictures:** Participants upload avatar photos via `POST /api/upload/avatar` on the API.
+- **Local Fallback:** When `AzureBlobStorage:ConnectionString` is `UseDevelopmentStorage=true`, files are stored in `RaceDay.API/wwwroot/uploads/` for offline grading.
+- **Displayed On:** Event detail pages show the uploaded banner; Profile page shows the participant's avatar.
+
+---
+
+## 🐳 Docker — Run with a Single Command
+
+### Prerequisites
+- [Docker Desktop](https://www.docker.com/products/docker-desktop/) installed and running
+
+### Option A — Run Both API + Web Together (Recommended)
+
+```bash
+docker compose up --build
+```
+
+Then open:
+- **MVC Web App:** http://localhost:8080
+- **API Swagger:** http://localhost:5000/swagger
+
+To stop:
+```bash
+docker compose down
+```
+
+### Option B — Run Only the MVC Web App
+
+> The API must be running separately (see "Run the API" below) on port 5000.
+
+```bash
+docker build -f RaceDay.Web/Dockerfile -t raceday-web .
+docker run -d -p 8080:80 -e ApiSettings__BaseUrl=http://host.docker.internal:5000 --name raceday-web raceday-web
+```
+
+Then open http://localhost:8080
+
+### Option C — Run Only the API
+
+```bash
+docker build -f RaceDay.API/Dockerfile -t raceday-api .
+docker run -d -p 5000:80 -e USE_INMEMORY_DB=true --name raceday-api raceday-api
+```
+
+Then open http://localhost:5000/swagger
+
+### Environment Variables
+
+| Variable | Service | Default | Description |
+|---|---|---|---|
+| `ApiSettings__BaseUrl` | Web | `http://localhost:5000` | URL of the API (use container name inside compose) |
+| `USE_INMEMORY_DB` | API | `false` | Use EF Core InMemory DB (no SQL Server needed) |
+| `AzureBlobStorage__ConnectionString` | API | `UseDevelopmentStorage=true` | Azure Blob or local fallback |
+| `AzureBlobStorage__ContainerName` | API | `raceday-images` | Blob container name |
+
+---
+
+## 🎬 YouTube Video Presentation — Part 3
+
+> 🎞️ **Unlisted YouTube Video Link:**
+> `https://youtu.be/REPLACE_WITH_YOUR_PART3_VIDEO_ID`
+
+### Video Presentation Structure (8–12 Minutes):
+1. **[0:00 – 1:00] Introduction**: Lesedi Mogatwe, ST10476247, PROG6212 POE Part 3 overview.
+2. **[1:00 – 3:00] Architecture Walkthrough**: MVC project structure, IRaceDayApiClient, session management, AuthorizeRoleAttribute.
+3. **[3:00 – 5:30] Organiser Interface Demo**: Dashboard, create event with banner upload, manage categories, view enrolment roster, capture results.
+4. **[5:30 – 7:30] Participant Interface Demo**: Browse events, enrol into category, My Events (colour-coded status), My Results (finishing position), Profile update with picture upload.
+5. **[7:30 – 9:00] Azure Blob Storage**: Show banner upload flow, image stored in blob / local fallback, displayed on event detail page.
+6. **[9:00 – 10:30] Docker Demo**: `docker compose up --build`, both containers starting, app working identically to local run.
+7. **[10:30 – 11:30] CI/CD Green Build**: Part 3 GitHub Actions green build, 20+ commits scrolled.
+8. **[11:30 – 12:00] Conclusion**: Summary of all 3 POE parts.
+
+---
+
+## 🧑‍💼 Academic Integrity / AI Disclosure
+
+- **Author:** Lesedi Mogatwe (ST10476247)
+- **Module:** PROG6212 — Portfolio of Evidence (Parts 1, 2 & 3)
+- Generative AI coding assistance was utilized as a pair-programming tool to format boilerplate syntax, structure XML comments, draft unit test scaffolding, and generate Razor view markup. All architectural decisions, entity schemas, business rules, role authorization boundaries, endpoint logic, Docker configuration, and Azure Blob integration were verified, tested, and validated by the student.
