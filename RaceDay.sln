@@ -7,6 +7,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RaceDay.API", "RaceDay.API\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RaceDay.Tests", "RaceDay.Tests\RaceDay.Tests.csproj", "{3F04E7B7-AB80-4999-A8BE-10BDFFEFD457}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RaceDay.Web", "RaceDay.Web\RaceDay.Web.csproj", "{B0B9C010-1F40-4773-83AA-52D51FD3BDF5}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -41,6 +43,18 @@ Global
 		{3F04E7B7-AB80-4999-A8BE-10BDFFEFD457}.Release|x64.Build.0 = Release|Any CPU
 		{3F04E7B7-AB80-4999-A8BE-10BDFFEFD457}.Release|x86.ActiveCfg = Release|Any CPU
 		{3F04E7B7-AB80-4999-A8BE-10BDFFEFD457}.Release|x86.Build.0 = Release|Any CPU
+		{B0B9C010-1F40-4773-83AA-52D51FD3BDF5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B0B9C010-1F40-4773-83AA-52D51FD3BDF5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B0B9C010-1F40-4773-83AA-52D51FD3BDF5}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{B0B9C010-1F40-4773-83AA-52D51FD3BDF5}.Debug|x64.Build.0 = Debug|Any CPU
+		{B0B9C010-1F40-4773-83AA-52D51FD3BDF5}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{B0B9C010-1F40-4773-83AA-52D51FD3BDF5}.Debug|x86.Build.0 = Debug|Any CPU
+		{B0B9C010-1F40-4773-83AA-52D51FD3BDF5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B0B9C010-1F40-4773-83AA-52D51FD3BDF5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B0B9C010-1F40-4773-83AA-52D51FD3BDF5}.Release|x64.ActiveCfg = Release|Any CPU
+		{B0B9C010-1F40-4773-83AA-52D51FD3BDF5}.Release|x64.Build.0 = Release|Any CPU
+		{B0B9C010-1F40-4773-83AA-52D51FD3BDF5}.Release|x86.ActiveCfg = Release|Any CPU
+		{B0B9C010-1F40-4773-83AA-52D51FD3BDF5}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
