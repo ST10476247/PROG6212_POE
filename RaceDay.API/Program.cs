@@ -87,6 +87,7 @@ builder.Services.AddAuthorization();
 // 4. Register Application Services
 builder.Services.AddScoped<IPasswordHasher, PasswordHasher>();
 builder.Services.AddScoped<ITokenService, TokenService>();
+builder.Services.AddScoped<IBlobStorageService, AzureBlobStorageService>();
 
 // 5. Register Controllers with JSON options
 builder.Services.AddControllers()
@@ -194,6 +195,7 @@ app.UseSwaggerUI(c =>
 });
 
 app.UseCors("AllowAll");
+app.UseStaticFiles();
 app.UseRouting();
 
 // Session must come before Authentication
@@ -205,6 +207,14 @@ app.MapControllers();
 
 // Default root redirects directly to Swagger UI
 app.MapGet("/", () => Results.Redirect("/swagger"));
+
+// Lightweight health probe used by docker-compose healthcheck.
+app.MapGet("/health", () => Results.Ok(new
+{
+    status = "Healthy",
+    service = "RaceDay.API",
+    timestamp = DateTime.UtcNow
+}));
 
 app.Run();
 
