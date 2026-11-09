@@ -1,0 +1,65 @@
+# ============================================================
+# RaceDay Platform — Docker Compose
+# Starts both the API and MVC Web application
+# ============================================================
+
+services:
+  # ── RaceDay REST API ────────────────────────────────────────
+  raceday-api:
+    build:
+      context: .
+      dockerfile: RaceDay.API/Dockerfile
+    container_name: raceday-api
+    ports:
+      - "5000:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:80
+      # Use in-memory database inside Docker (no SQL Server needed)
+      - USE_INMEMORY_DB=true
+      # Azure Blob Storage — set your connection string here
+      # Leave as UseDevelopmentStorage=true to use local file fallback
+      - AzureBlobStorage__ConnectionString=UseDevelopmentStorage=true
+      - AzureBlobStorage__ContainerName=raceday-images
+    volumes:
+      - raceday-uploads:/app/wwwroot/uploads
+    networks:
+      - raceday-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    restart: unless-stopped
+
+  # ── RaceDay MVC Web Application ────────────────────────────
+  raceday-web:
+    build:
+      context: .
+      dockerfile: RaceDay.Web/Dockerfile
+    container_name: raceday-web
+    ports:
+      - "8080:80"
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:80
+      # Point the MVC app at the API container
+      - ApiSettings__BaseUrl=http://raceday-api:80
+      # Session configuration
+      - Session__TimeoutMinutes=60
+    depends_on:
+      - raceday-api
+    networks:
+      - raceday-net
+    restart: unless-stopped
+
+# ── Named volumes ────────────────────────────────────────────
+volumes:
+  raceday-uploads:
+
+# ── Shared network ───────────────────────────────────────────
+networks:
+  raceday-net:
+    driver: bridge
+

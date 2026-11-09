@@ -1,0 +1,39 @@
+# ── Build output directories ──────────────────────────────────
+**/bin/
+**/obj/
+
+# ── IDE and OS artefacts ──────────────────────────────────────
+.vs/
+.vscode/
+*.user
+.DS_Store
+Thumbs.db
+
+# ── NuGet / restore cache ─────────────────────────────────────
+**/.nuget/
+*.nupkg
+
+# ── Sensitive / local config ──────────────────────────────────
+**/appsettings.Local.json
+**/appsettings.*.Local.json
+**/*.pfx
+**/*.key
+
+# ── Logs ──────────────────────────────────────────────────────
+**/logs/
+**/*.log
+
+# ── Node / frontend tooling (if any) ─────────────────────────
+**/node_modules/
+
+# ── Git internals ─────────────────────────────────────────────
+.git/
+.gitignore
+
+# ── Scripts / docs (not needed in image) ─────────────────────
+docs/
+*.md
+*.bat
+*.ps1
+PUSH_*.ps1
+
