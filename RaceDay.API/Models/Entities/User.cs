@@ -25,6 +25,9 @@ namespace RaceDay.API.Models.Entities
         [MaxLength(50)]
         public string? Province { get; set; }
 
+        [MaxLength(500)]
+        public string? ProfilePictureUrl { get; set; }
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         public bool IsActive { get; set; } = true;

@@ -11,6 +11,7 @@ namespace RaceDay.API.Models.DTOs
         public string FullName { get; set; } = string.Empty;
         public string? PhoneNumber { get; set; }
         public string? Province { get; set; }
+        public string? ProfilePictureUrl { get; set; }
         public DateTime CreatedAt { get; set; }
 
         public OrganiserDetailDto? OrganiserProfile { get; set; }
@@ -43,6 +44,7 @@ namespace RaceDay.API.Models.DTOs
         public string? FullName { get; set; }
         public string? PhoneNumber { get; set; }
         public string? Province { get; set; }
+        public string? ProfilePictureUrl { get; set; }
 
         // Organiser updates
         public string? CompanyName { get; set; }

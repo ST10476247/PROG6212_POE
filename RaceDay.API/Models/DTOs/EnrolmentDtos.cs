@@ -19,15 +19,27 @@ namespace RaceDay.API.Models.DTOs
         public string ParticipantEmail { get; set; } = string.Empty;
         public int EventId { get; set; }
         public string EventTitle { get; set; } = string.Empty;
+        public DateTime EventDate { get; set; }
+        public string EventType { get; set; } = string.Empty;
+        public string City { get; set; } = string.Empty;
+        public string Province { get; set; } = string.Empty;
+        public string? BannerUrl { get; set; }
         public int CategoryId { get; set; }
         public string CategoryName { get; set; } = string.Empty;
         public decimal DistanceKm { get; set; }
+        public decimal EntryFeeZar { get; set; }
         public DateTime EnrolmentDate { get; set; }
         public string? BibNumber { get; set; }
         public string PaymentStatus { get; set; } = string.Empty;
         public string? PaymentReference { get; set; }
         public string Status { get; set; } = string.Empty;
         public string? EmergencyNotes { get; set; }
+
+        // Participant contact details (used by the organiser roster view)
+        public string? PhoneNumber { get; set; }
+        public string? ClubName { get; set; }
+        public string? TshirtSize { get; set; }
+        public string? EmergencyContact { get; set; }
 
         // Optional result link if finished
         public ResultDto? Result { get; set; }

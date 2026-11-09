@@ -77,6 +77,7 @@ namespace RaceDay.API.Models.DTOs
         public DateTime ExpiresAt { get; set; }
         public int? OrganiserId { get; set; }
         public int? ParticipantId { get; set; }
+        public string? ProfilePictureUrl { get; set; }
     }
 
     public class RefreshTokenDto

@@ -10,7 +10,15 @@ namespace RaceDay.API.Models.DTOs
         public int EnrolmentId { get; set; }
         public string ParticipantName { get; set; } = string.Empty;
         public string? BibNumber { get; set; }
+        public int EventId { get; set; }
         public string EventTitle { get; set; } = string.Empty;
+        public DateTime EventDate { get; set; }
+        public string EventType { get; set; } = string.Empty;
+        public string City { get; set; } = string.Empty;
+        public string Province { get; set; } = string.Empty;
+        public string? BannerUrl { get; set; }
+        public decimal DistanceKm { get; set; }
+        public int TotalFinishers { get; set; }
         public string CategoryName { get; set; } = string.Empty;
         public int? FinishTimeSec { get; set; }
         public int? ChipTimeSec { get; set; }
