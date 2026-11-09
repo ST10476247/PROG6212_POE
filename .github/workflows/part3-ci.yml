@@ -1,0 +1,91 @@
+name: RaceDay CI — Part 3 (API + MVC + Tests)
+
+on:
+  push:
+    branches: [ "main", "part3", "part-3" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  # ── Build & Test RaceDay.API ──────────────────────────────
+  build-api:
+    name: Build & Test RaceDay API
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore API dependencies
+        run: dotnet restore RaceDay.API/RaceDay.API.csproj
+
+      - name: Build RaceDay.API
+        run: dotnet build RaceDay.API/RaceDay.API.csproj --no-restore -c Release
+
+      - name: Restore test dependencies
+        run: dotnet restore RaceDay.Tests/RaceDay.Tests.csproj
+
+      - name: Run unit tests
+        run: dotnet test RaceDay.Tests/RaceDay.Tests.csproj --no-restore -m:1 --logger "trx;LogFileName=test-results.trx"
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: RaceDay.Tests/TestResults/*.trx
+
+  # ── Build RaceDay.Web (MVC) ───────────────────────────────
+  build-web:
+    name: Build RaceDay MVC Web App
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up .NET 8
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Restore MVC dependencies
+        run: dotnet restore RaceDay.Web/RaceDay.Web.csproj
+
+      - name: Build RaceDay.Web
+        run: dotnet build RaceDay.Web/RaceDay.Web.csproj --no-restore -c Release
+
+      - name: Publish RaceDay.Web (verify publishable)
+        run: dotnet publish RaceDay.Web/RaceDay.Web.csproj --no-restore -c Release -o /tmp/raceday-web-publish /p:UseAppHost=false
+
+  # ── Docker lint / validate ────────────────────────────────
+  docker-validate:
+    name: Validate Dockerfiles
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Lint API Dockerfile (hadolint)
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: RaceDay.API/Dockerfile
+          failure-threshold: error
+        continue-on-error: true
+
+      - name: Lint Web Dockerfile (hadolint)
+        uses: hadolint/hadolint-action@v3.1.0
+        with:
+          dockerfile: RaceDay.Web/Dockerfile
+          failure-threshold: error
+        continue-on-error: true
+
+      - name: Verify docker-compose.yml syntax
+        run: docker compose -f docker-compose.yml config --quiet
+
