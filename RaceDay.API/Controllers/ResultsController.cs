@@ -49,13 +49,24 @@ namespace RaceDay.API.Controllers
             if (r == null)
                 return NotFound(new { message = $"Result with ID {id} not found." });
 
+            int totalFinishers = await _context.Results
+                .CountAsync(x => x.Enrolment.EventId == r.Enrolment.EventId && x.Status == "Finished");
+
             var dto = new ResultDto
             {
                 ResultId = r.ResultId,
                 EnrolmentId = r.EnrolmentId,
                 ParticipantName = r.Enrolment.Participant.User.FullName,
                 BibNumber = r.Enrolment.BibNumber,
+                EventId = r.Enrolment.EventId,
                 EventTitle = r.Enrolment.Event.Title,
+                EventDate = r.Enrolment.Event.StartDate,
+                EventType = r.Enrolment.Event.EventType,
+                City = r.Enrolment.Event.City,
+                Province = r.Enrolment.Event.Province,
+                BannerUrl = r.Enrolment.Event.BannerUrl,
+                DistanceKm = r.Enrolment.Category.DistanceKm,
+                TotalFinishers = totalFinishers,
                 CategoryName = r.Enrolment.Category.CategoryName,
                 FinishTimeSec = r.FinishTimeSec,
                 ChipTimeSec = r.ChipTimeSec,
@@ -91,33 +102,49 @@ namespace RaceDay.API.Controllers
                 return StatusCode(StatusCodes.Status403Forbidden, new { message = "Participant profile not found." });
             }
 
-            var results = await _context.Results
+            var rows = await _context.Results
                 .Include(r => r.Enrolment)
                     .ThenInclude(en => en.Event)
                 .Include(r => r.Enrolment)
                     .ThenInclude(en => en.Category)
                 .Where(r => r.Enrolment.ParticipantId == participant.ParticipantId)
                 .OrderByDescending(r => r.Enrolment.Event.StartDate)
-                .Select(r => new ResultDto
-                {
-                    ResultId = r.ResultId,
-                    EnrolmentId = r.EnrolmentId,
-                    ParticipantName = participant.User.FullName,
-                    BibNumber = r.Enrolment.BibNumber,
-                    EventTitle = r.Enrolment.Event.Title,
-                    CategoryName = r.Enrolment.Category.CategoryName,
-                    FinishTimeSec = r.FinishTimeSec,
-                    ChipTimeSec = r.ChipTimeSec,
-                    FinishTimeFormatted = ResultDto.FormatSeconds(r.FinishTimeSec),
-                    ChipTimeFormatted = ResultDto.FormatSeconds(r.ChipTimeSec),
-                    GunPosition = r.GunPosition,
-                    CategoryPosition = r.CategoryPosition,
-                    GenderPosition = r.GenderPosition,
-                    Status = r.Status,
-                    Splits = r.Splits,
-                    RecordedAt = r.RecordedAt
-                })
                 .ToListAsync();
+
+            var eventIds = rows.Select(r => r.Enrolment.EventId).Distinct().ToList();
+            var finisherCounts = await _context.Results
+                .Where(r => eventIds.Contains(r.Enrolment.EventId) && r.Status == "Finished")
+                .GroupBy(r => r.Enrolment.EventId)
+                .Select(g => new { EventId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.EventId, x => x.Count);
+
+            var results = rows.Select(r => new ResultDto
+            {
+                ResultId = r.ResultId,
+                EnrolmentId = r.EnrolmentId,
+                ParticipantName = participant.User.FullName,
+                BibNumber = r.Enrolment.BibNumber,
+                EventId = r.Enrolment.EventId,
+                EventTitle = r.Enrolment.Event.Title,
+                EventDate = r.Enrolment.Event.StartDate,
+                EventType = r.Enrolment.Event.EventType,
+                City = r.Enrolment.Event.City,
+                Province = r.Enrolment.Event.Province,
+                BannerUrl = r.Enrolment.Event.BannerUrl,
+                DistanceKm = r.Enrolment.Category.DistanceKm,
+                TotalFinishers = finisherCounts.TryGetValue(r.Enrolment.EventId, out var count) ? count : 0,
+                CategoryName = r.Enrolment.Category.CategoryName,
+                FinishTimeSec = r.FinishTimeSec,
+                ChipTimeSec = r.ChipTimeSec,
+                FinishTimeFormatted = ResultDto.FormatSeconds(r.FinishTimeSec),
+                ChipTimeFormatted = ResultDto.FormatSeconds(r.ChipTimeSec),
+                GunPosition = r.GunPosition,
+                CategoryPosition = r.CategoryPosition,
+                GenderPosition = r.GenderPosition,
+                Status = r.Status,
+                Splits = r.Splits,
+                RecordedAt = r.RecordedAt
+            }).ToList();
 
             return Ok(results);
         }
@@ -370,13 +397,24 @@ namespace RaceDay.API.Controllers
             if (r == null)
                 return NotFound(new { message = $"No result recorded yet for enrolment {enrolmentId}." });
 
+            int totalFinishers = await _context.Results
+                .CountAsync(x => x.Enrolment.EventId == r.Enrolment.EventId && x.Status == "Finished");
+
             return Ok(new ResultDto
             {
                 ResultId = r.ResultId,
                 EnrolmentId = r.EnrolmentId,
                 ParticipantName = r.Enrolment.Participant.User.FullName,
                 BibNumber = r.Enrolment.BibNumber,
+                EventId = r.Enrolment.EventId,
                 EventTitle = r.Enrolment.Event.Title,
+                EventDate = r.Enrolment.Event.StartDate,
+                EventType = r.Enrolment.Event.EventType,
+                City = r.Enrolment.Event.City,
+                Province = r.Enrolment.Event.Province,
+                BannerUrl = r.Enrolment.Event.BannerUrl,
+                DistanceKm = r.Enrolment.Category.DistanceKm,
+                TotalFinishers = totalFinishers,
                 CategoryName = r.Enrolment.Category.CategoryName,
                 FinishTimeSec = r.FinishTimeSec,
                 ChipTimeSec = r.ChipTimeSec,

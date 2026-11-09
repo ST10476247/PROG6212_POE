@@ -10,6 +10,7 @@ using RaceDay.API.Data;
 using RaceDay.API.Filters;
 using RaceDay.API.Models.DTOs;
 using RaceDay.API.Models.Entities;
+using RaceDay.API.Services;
 using Swashbuckle.AspNetCore.Annotations;
 
 namespace RaceDay.API.Controllers
@@ -21,10 +22,16 @@ namespace RaceDay.API.Controllers
     public class EventsController : ControllerBase
     {
         private readonly RaceDayDbContext _context;
+        private readonly IBlobStorageService _blobService;
 
-        public EventsController(RaceDayDbContext context)
+        public EventsController(RaceDayDbContext context) : this(context, null!)
+        {
+        }
+
+        public EventsController(RaceDayDbContext context, IBlobStorageService blobService)
         {
             _context = context;
+            _blobService = blobService;
         }
 
         /// <summary>
@@ -337,6 +344,50 @@ namespace RaceDay.API.Controllers
         }
 
         /// <summary>
+        /// Uploads an event banner image directly to Azure Blob Storage and attaches it to the event
+        /// </summary>
+        [HttpPost("{id:int}/banner")]
+        [RequireRole("Organiser")]
+        [SwaggerOperation(Summary = "Upload Event Banner", Description = "Uploads a banner poster for the specified event to Azure Blob Storage.")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status403Forbidden)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
+        public async Task<IActionResult> UploadEventBanner(int id, [FromForm] IFormFile? bannerFile)
+        {
+            if (bannerFile == null || bannerFile.Length == 0)
+                return BadRequest(new { message = "No banner image was provided." });
+
+            if (bannerFile.Length > 10 * 1024 * 1024)
+                return BadRequest(new { message = "Banner image must not exceed 10MB." });
+
+            var ev = await _context.Events.FindAsync(id);
+            if (ev == null)
+                return NotFound(new { message = $"Event with ID {id} was not found." });
+
+            var user = HttpContext.GetCurrentUser();
+            var organiser = await _context.Organisers.FirstOrDefaultAsync(o => o.UserId == user.UserId);
+
+            if (organiser == null || ev.OrganiserId != organiser.OrganiserId)
+            {
+                return StatusCode(StatusCodes.Status403Forbidden, new { message = "Forbidden. Only the event organiser can upload banners for this event." });
+            }
+
+            using var stream = bannerFile.OpenReadStream();
+            string bannerUrl = await _blobService.UploadBannerImageAsync(stream, bannerFile.FileName, bannerFile.ContentType);
+
+            ev.BannerUrl = bannerUrl;
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message = "Banner image uploaded successfully to Azure Blob Storage.",
+                eventId = ev.EventId,
+                bannerUrl = ev.BannerUrl
+            });
+        }
+
+        /// <summary>
         /// Deletes an event (Organiser owner only; rejected if paid enrolments exist)
         /// </summary>
         [HttpDelete("{id:int}")]
@@ -502,27 +553,47 @@ namespace RaceDay.API.Controllers
                 .Include(en => en.Result)
                 .Where(en => en.EventId == id)
                 .OrderBy(en => en.EnrolmentDate)
-                .Select(en => new EnrolmentResponseDto
-                {
-                    EnrolmentId = en.EnrolmentId,
-                    ParticipantId = en.ParticipantId,
-                    ParticipantName = en.Participant.User.FullName,
-                    ParticipantEmail = en.Participant.User.Email,
-                    EventId = en.EventId,
-                    EventTitle = ev.Title,
-                    CategoryId = en.CategoryId,
-                    CategoryName = en.Category.CategoryName,
-                    DistanceKm = en.Category.DistanceKm,
-                    EnrolmentDate = en.EnrolmentDate,
-                    BibNumber = en.BibNumber,
-                    PaymentStatus = en.PaymentStatus,
-                    PaymentReference = en.PaymentReference,
-                    Status = en.Status,
-                    EmergencyNotes = en.EmergencyNotes
-                })
                 .ToListAsync();
 
-            return Ok(enrolments);
+            var roster = enrolments.Select(en => new EnrolmentResponseDto
+            {
+                EnrolmentId = en.EnrolmentId,
+                ParticipantId = en.ParticipantId,
+                ParticipantName = en.Participant.User.FullName,
+                ParticipantEmail = en.Participant.User.Email,
+                EventId = en.EventId,
+                EventTitle = ev.Title,
+                EventDate = ev.StartDate,
+                EventType = ev.EventType,
+                City = ev.City,
+                Province = ev.Province,
+                BannerUrl = ev.BannerUrl,
+                CategoryId = en.CategoryId,
+                CategoryName = en.Category.CategoryName,
+                DistanceKm = en.Category.DistanceKm,
+                EntryFeeZar = en.Category.EntryFeeZar,
+                EnrolmentDate = en.EnrolmentDate,
+                BibNumber = en.BibNumber,
+                PaymentStatus = en.PaymentStatus,
+                PaymentReference = en.PaymentReference,
+                Status = en.Status,
+                EmergencyNotes = en.EmergencyNotes,
+                PhoneNumber = en.Participant.User.PhoneNumber,
+                ClubName = en.Participant.ClubName,
+                TshirtSize = en.Participant.TshirtSize,
+                EmergencyContact = BuildEmergencyContact(en.Participant.EmergencyContactName, en.Participant.EmergencyContactNo)
+            }).ToList();
+
+            return Ok(roster);
+        }
+
+        private static string? BuildEmergencyContact(string? name, string? number)
+        {
+            if (string.IsNullOrWhiteSpace(name) && string.IsNullOrWhiteSpace(number))
+                return null;
+            return string.IsNullOrWhiteSpace(name)
+                ? number
+                : (string.IsNullOrWhiteSpace(number) ? name : $"{name} ({number})");
         }
 
         /// <summary>
@@ -550,29 +621,41 @@ namespace RaceDay.API.Controllers
                 query = query.Where(r => r.Enrolment.CategoryId == categoryId.Value);
             }
 
-            var results = await query
+            var rows = await query
                 .OrderBy(r => r.GunPosition ?? int.MaxValue)
                 .ThenBy(r => r.ChipTimeSec ?? int.MaxValue)
-                .Select(r => new ResultDto
-                {
-                    ResultId = r.ResultId,
-                    EnrolmentId = r.EnrolmentId,
-                    ParticipantName = r.Enrolment.Participant.User.FullName,
-                    BibNumber = r.Enrolment.BibNumber,
-                    EventTitle = ev.Title,
-                    CategoryName = r.Enrolment.Category.CategoryName,
-                    FinishTimeSec = r.FinishTimeSec,
-                    ChipTimeSec = r.ChipTimeSec,
-                    FinishTimeFormatted = ResultDto.FormatSeconds(r.FinishTimeSec),
-                    ChipTimeFormatted = ResultDto.FormatSeconds(r.ChipTimeSec),
-                    GunPosition = r.GunPosition,
-                    CategoryPosition = r.CategoryPosition,
-                    GenderPosition = r.GenderPosition,
-                    Status = r.Status,
-                    Splits = r.Splits,
-                    RecordedAt = r.RecordedAt
-                })
                 .ToListAsync();
+
+            int totalFinishers = await _context.Results
+                .CountAsync(r => r.Enrolment.EventId == id && r.Status == "Finished");
+
+            var results = rows.Select(r => new ResultDto
+            {
+                ResultId = r.ResultId,
+                EnrolmentId = r.EnrolmentId,
+                ParticipantName = r.Enrolment.Participant.User.FullName,
+                BibNumber = r.Enrolment.BibNumber,
+                EventId = ev.EventId,
+                EventTitle = ev.Title,
+                EventDate = ev.StartDate,
+                EventType = ev.EventType,
+                City = ev.City,
+                Province = ev.Province,
+                BannerUrl = ev.BannerUrl,
+                DistanceKm = r.Enrolment.Category.DistanceKm,
+                TotalFinishers = totalFinishers,
+                CategoryName = r.Enrolment.Category.CategoryName,
+                FinishTimeSec = r.FinishTimeSec,
+                ChipTimeSec = r.ChipTimeSec,
+                FinishTimeFormatted = ResultDto.FormatSeconds(r.FinishTimeSec),
+                ChipTimeFormatted = ResultDto.FormatSeconds(r.ChipTimeSec),
+                GunPosition = r.GunPosition,
+                CategoryPosition = r.CategoryPosition,
+                GenderPosition = r.GenderPosition,
+                Status = r.Status,
+                Splits = r.Splits,
+                RecordedAt = r.RecordedAt
+            }).ToList();
 
             return Ok(results);
         }

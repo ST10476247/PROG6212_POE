@@ -224,7 +224,8 @@ namespace RaceDay.API.Controllers
                 Token = token,
                 ExpiresAt = expiresAt,
                 OrganiserId = organiserId,
-                ParticipantId = participantId
+                ParticipantId = participantId,
+                ProfilePictureUrl = user.ProfilePictureUrl
             };
 
             return Ok(response);
@@ -289,7 +290,8 @@ namespace RaceDay.API.Controllers
                 Token = token,
                 ExpiresAt = expiresAt,
                 OrganiserId = organiserId,
-                ParticipantId = participantId
+                ParticipantId = participantId,
+                ProfilePictureUrl = user.ProfilePictureUrl
             });
         }
     }

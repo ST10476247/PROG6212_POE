@@ -20,11 +20,17 @@ namespace RaceDay.API.Controllers
     {
         private readonly RaceDayDbContext _context;
         private readonly IPasswordHasher _passwordHasher;
+        private readonly IBlobStorageService _blobService;
 
-        public ProfileController(RaceDayDbContext context, IPasswordHasher passwordHasher)
+        public ProfileController(RaceDayDbContext context, IPasswordHasher passwordHasher) : this(context, passwordHasher, null!)
+        {
+        }
+
+        public ProfileController(RaceDayDbContext context, IPasswordHasher passwordHasher, IBlobStorageService blobService)
         {
             _context = context;
             _passwordHasher = passwordHasher;
+            _blobService = blobService;
         }
 
         /// <summary>
@@ -56,6 +62,7 @@ namespace RaceDay.API.Controllers
                 FullName = user.FullName,
                 PhoneNumber = user.PhoneNumber,
                 Province = user.Province,
+                ProfilePictureUrl = user.ProfilePictureUrl,
                 CreatedAt = user.CreatedAt
             };
 
@@ -114,6 +121,7 @@ namespace RaceDay.API.Controllers
             if (!string.IsNullOrWhiteSpace(dto.FullName)) user.FullName = dto.FullName.Trim();
             if (dto.PhoneNumber != null) user.PhoneNumber = dto.PhoneNumber;
             if (dto.Province != null) user.Province = dto.Province;
+            if (dto.ProfilePictureUrl != null) user.ProfilePictureUrl = dto.ProfilePictureUrl;
 
             if (user.OrganiserProfile != null)
             {
@@ -167,6 +175,44 @@ namespace RaceDay.API.Controllers
             await _context.SaveChangesAsync();
 
             return Ok(new { message = "Password changed successfully." });
+        }
+
+        /// <summary>
+        /// Upload and update user profile picture in Azure Blob Storage
+        /// </summary>
+        [HttpPost("picture")]
+        [SwaggerOperation(Summary = "Upload Profile Picture", Description = "Uploads a picture to Azure Blob Storage and attaches it to the authenticated user.")]
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        public async Task<IActionResult> UploadProfilePicture([FromForm] IFormFile? file)
+        {
+            if (file == null || file.Length == 0)
+                return BadRequest(new { message = "No file was selected for upload." });
+
+            if (file.Length > 5 * 1024 * 1024)
+                return BadRequest(new { message = "Profile picture must be under 5MB." });
+
+            string ext = System.IO.Path.GetExtension(file.FileName).ToLowerInvariant();
+            if (ext != ".jpg" && ext != ".jpeg" && ext != ".png" && ext != ".webp")
+                return BadRequest(new { message = "Only JPG, PNG, and WebP images are supported." });
+
+            var userCtx = HttpContext.GetCurrentUser();
+            var user = await _context.Users.FindAsync(userCtx.UserId);
+
+            if (user == null)
+                return NotFound(new { message = "User not found." });
+
+            using var stream = file.OpenReadStream();
+            string blobUrl = await _blobService.UploadProfilePictureAsync(stream, file.FileName, file.ContentType);
+
+            user.ProfilePictureUrl = blobUrl;
+            await _context.SaveChangesAsync();
+
+            return Ok(new
+            {
+                message = "Profile picture uploaded successfully.",
+                profilePictureUrl = blobUrl
+            });
         }
     }
 }

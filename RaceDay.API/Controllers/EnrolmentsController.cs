@@ -119,6 +119,11 @@ namespace RaceDay.API.Controllers
                 ParticipantEmail = participant.User.Email,
                 EventId = category.EventId,
                 EventTitle = category.Event.Title,
+                EventDate = category.Event.StartDate,
+                EventType = category.Event.EventType,
+                City = category.Event.City,
+                Province = category.Event.Province,
+                BannerUrl = category.Event.BannerUrl,
                 CategoryId = category.CategoryId,
                 CategoryName = category.CategoryName,
                 DistanceKm = category.DistanceKm,
@@ -127,7 +132,11 @@ namespace RaceDay.API.Controllers
                 PaymentStatus = enrolment.PaymentStatus,
                 PaymentReference = enrolment.PaymentReference,
                 Status = enrolment.Status,
-                EmergencyNotes = enrolment.EmergencyNotes
+                EmergencyNotes = enrolment.EmergencyNotes,
+                PhoneNumber = participant.User.PhoneNumber,
+                ClubName = participant.ClubName,
+                TshirtSize = participant.TshirtSize,
+                EmergencyContact = BuildEmergencyContact(participant.EmergencyContactName, participant.EmergencyContactNo)
             };
 
             return CreatedAtAction(nameof(GetEnrolmentById), new { id = enrolment.EnrolmentId }, response);
@@ -172,46 +181,72 @@ namespace RaceDay.API.Controllers
                 .Include(en => en.Result)
                 .Where(en => en.ParticipantId == participant.ParticipantId)
                 .OrderByDescending(en => en.EnrolmentDate)
-                .Select(en => new EnrolmentResponseDto
-                {
-                    EnrolmentId = en.EnrolmentId,
-                    ParticipantId = en.ParticipantId,
-                    ParticipantName = participant.User.FullName,
-                    ParticipantEmail = participant.User.Email,
-                    EventId = en.EventId,
-                    EventTitle = en.Event.Title,
-                    CategoryId = en.CategoryId,
-                    CategoryName = en.Category.CategoryName,
-                    DistanceKm = en.Category.DistanceKm,
-                    EnrolmentDate = en.EnrolmentDate,
-                    BibNumber = en.BibNumber,
-                    PaymentStatus = en.PaymentStatus,
-                    PaymentReference = en.PaymentReference,
-                    Status = en.Status,
-                    EmergencyNotes = en.EmergencyNotes,
-                    Result = en.Result != null ? new ResultDto
-                    {
-                        ResultId = en.Result.ResultId,
-                        EnrolmentId = en.EnrolmentId,
-                        ParticipantName = participant.User.FullName,
-                        BibNumber = en.BibNumber,
-                        EventTitle = en.Event.Title,
-                        CategoryName = en.Category.CategoryName,
-                        FinishTimeSec = en.Result.FinishTimeSec,
-                        ChipTimeSec = en.Result.ChipTimeSec,
-                        FinishTimeFormatted = ResultDto.FormatSeconds(en.Result.FinishTimeSec),
-                        ChipTimeFormatted = ResultDto.FormatSeconds(en.Result.ChipTimeSec),
-                        GunPosition = en.Result.GunPosition,
-                        CategoryPosition = en.Result.CategoryPosition,
-                        GenderPosition = en.Result.GenderPosition,
-                        Status = en.Result.Status,
-                        Splits = en.Result.Splits,
-                        RecordedAt = en.Result.RecordedAt
-                    } : null
-                })
                 .ToListAsync();
 
-            return Ok(enrolments);
+            var list = enrolments.Select(en => new EnrolmentResponseDto
+            {
+                EnrolmentId = en.EnrolmentId,
+                ParticipantId = en.ParticipantId,
+                ParticipantName = participant.User.FullName,
+                ParticipantEmail = participant.User.Email,
+                EventId = en.EventId,
+                EventTitle = en.Event.Title,
+                EventDate = en.Event.StartDate,
+                EventType = en.Event.EventType,
+                City = en.Event.City,
+                Province = en.Event.Province,
+                BannerUrl = en.Event.BannerUrl,
+                CategoryId = en.CategoryId,
+                CategoryName = en.Category.CategoryName,
+                DistanceKm = en.Category.DistanceKm,
+                EnrolmentDate = en.EnrolmentDate,
+                BibNumber = en.BibNumber,
+                PaymentStatus = en.PaymentStatus,
+                PaymentReference = en.PaymentReference,
+                Status = en.Status,
+                EmergencyNotes = en.EmergencyNotes,
+                PhoneNumber = participant.User.PhoneNumber,
+                ClubName = participant.ClubName,
+                TshirtSize = participant.TshirtSize,
+                EmergencyContact = BuildEmergencyContact(participant.EmergencyContactName, participant.EmergencyContactNo),
+                Result = en.Result != null ? new ResultDto
+                {
+                    ResultId = en.Result.ResultId,
+                    EnrolmentId = en.EnrolmentId,
+                    ParticipantName = participant.User.FullName,
+                    BibNumber = en.BibNumber,
+                    EventId = en.EventId,
+                    EventTitle = en.Event.Title,
+                    EventDate = en.Event.StartDate,
+                    EventType = en.Event.EventType,
+                    City = en.Event.City,
+                    Province = en.Event.Province,
+                    BannerUrl = en.Event.BannerUrl,
+                    DistanceKm = en.Category.DistanceKm,
+                    CategoryName = en.Category.CategoryName,
+                    FinishTimeSec = en.Result.FinishTimeSec,
+                    ChipTimeSec = en.Result.ChipTimeSec,
+                    FinishTimeFormatted = ResultDto.FormatSeconds(en.Result.FinishTimeSec),
+                    ChipTimeFormatted = ResultDto.FormatSeconds(en.Result.ChipTimeSec),
+                    GunPosition = en.Result.GunPosition,
+                    CategoryPosition = en.Result.CategoryPosition,
+                    GenderPosition = en.Result.GenderPosition,
+                    Status = en.Result.Status,
+                    Splits = en.Result.Splits,
+                    RecordedAt = en.Result.RecordedAt
+                } : null
+            }).ToList();
+
+            return Ok(list);
+        }
+
+        private static string? BuildEmergencyContact(string? name, string? number)
+        {
+            if (string.IsNullOrWhiteSpace(name) && string.IsNullOrWhiteSpace(number))
+                return null;
+            return string.IsNullOrWhiteSpace(name)
+                ? number
+                : (string.IsNullOrWhiteSpace(number) ? name : $"{name} ({number})");
         }
 
         /// <summary>
@@ -263,15 +298,25 @@ namespace RaceDay.API.Controllers
                 ParticipantEmail = en.Participant.User.Email,
                 EventId = en.EventId,
                 EventTitle = en.Event.Title,
+                EventDate = en.Event.StartDate,
+                EventType = en.Event.EventType,
+                City = en.Event.City,
+                Province = en.Event.Province,
+                BannerUrl = en.Event.BannerUrl,
                 CategoryId = en.CategoryId,
                 CategoryName = en.Category.CategoryName,
                 DistanceKm = en.Category.DistanceKm,
+                EntryFeeZar = en.Category.EntryFeeZar,
                 EnrolmentDate = en.EnrolmentDate,
                 BibNumber = en.BibNumber,
                 PaymentStatus = en.PaymentStatus,
                 PaymentReference = en.PaymentReference,
                 Status = en.Status,
-                EmergencyNotes = en.EmergencyNotes
+                EmergencyNotes = en.EmergencyNotes,
+                PhoneNumber = en.Participant.User.PhoneNumber,
+                ClubName = en.Participant.ClubName,
+                TshirtSize = en.Participant.TshirtSize,
+                EmergencyContact = BuildEmergencyContact(en.Participant.EmergencyContactName, en.Participant.EmergencyContactNo)
             };
 
             return Ok(response);
