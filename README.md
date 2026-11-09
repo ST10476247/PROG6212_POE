@@ -275,11 +275,6 @@ Status: ALL CHECKS PASSED (GREEN BUILD)
 
 ---
 
-## 🎬 YouTube Video Presentation — Part 2
-
-> 🎞️ **Unlisted YouTube Video Link:**  
-> `https://youtu.be/REPLACE_WITH_YOUR_UNLISTED_VIDEO_ID`
-
 ---
 
 ## 🚀 How to Run Locally
@@ -481,11 +476,6 @@ Then open http://localhost:5000/swagger
 | `AzureBlobStorage__ContainerName` | API | `raceday-images` | Blob container name |
 
 ---
-
-## 🎬 YouTube Video Presentation — Part 3
-
-> 🎞️ **Unlisted YouTube Video Link:**
-> `https://youtu.be/REPLACE_WITH_YOUR_PART3_VIDEO_ID`
 
 ---
 
